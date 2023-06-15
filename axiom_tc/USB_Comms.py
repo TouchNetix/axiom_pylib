@@ -126,11 +126,11 @@ class USB_Comms:
 
                     #TODO: Max Length needs to be taken from End-Point's descriptor
                     #self.max_length = self.__device.get_indexed_string(1, max_length=10)
-                    if dev['product_string'] == 'TNxPB-005':
+                    if 'TNxPB-005' in dev['product_string']:
                         self.wMaxPacketSize = 512
-                    if dev['product_string'] == 'TNxPB-007':
+                    if 'TNxPB-007' in dev['product_string']:
                         self.wMaxPacketSize = 64
-                    if dev['product_string'] == 'AXPB009':
+                    if 'AXPB009' in dev['product_string']:
                         self.wMaxPacketSize = 64
 
                     self.hidPayloadSize = self.wMaxPacketSize + 1
