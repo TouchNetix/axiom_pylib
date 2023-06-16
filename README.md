@@ -22,6 +22,8 @@ This library provides users the building blocks to communicate with the aXiom to
 
 `u33_CRCData.py` - Provides access to the CRCs within aXiom.
 
+`u48_GPIOControls.py` - Provides access to the GPIO controls for aXiom.
+
 `uXX_Template.py` - Template file to use when creating more python files for specific usages.
 
 ## Prerequisites
