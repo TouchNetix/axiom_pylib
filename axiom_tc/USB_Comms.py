@@ -53,7 +53,7 @@ class USB_Comms:
     hidPayloadSize = wMaxPacketSize + 1
 
     # TNx Touch-Bridge-Protocol Commands
-    # For details refer to "TNxD00359-A1 TNxAC-006 User Guide.pdf"
+    # For more details, refer to the relevant protocol bridge datasheet
     AX_TBP_CMD_NULL = 0x86
     AX_TBP_I2C_DEVICE1 = 0x51  # Read as: issue i2c/SPI transaction to device 1.
     AX_TBP_I2C_DEVICE2 = 0x52  # Read as: issue i2c/SPI transaction to device 2.
@@ -75,9 +75,9 @@ class USB_Comms:
     AX_TBP_WR_OK = 0x4
 
     # USB Interface numbers
-    AX_IF_TBPCTRL = 0x0  # TNxPB-005 TBP Control Interface
-    AX_IF_DIGITIZER = 0x1  # TNxPB-005 Digitizer Interface
-    AX_IF_FORCEDATA = 0x2  # TNxPB-005 Press Data Interface
+    AX_IF_TBPCTRL = 0x0    # TBP Control Interface
+    AX_IF_DIGITIZER = 0x1  # Digitizer Interface
+    AX_IF_FORCEDATA = 0x2  # Press Data Interface
 
     ATMEL_VENDOR_ID = 0x03EB
     ST_VENDOR_ID    = 0x0483
