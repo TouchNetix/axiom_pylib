@@ -103,24 +103,11 @@ class u48_GPIOControls:
         self.reg_gpio_pins = [0] * 5
         self.gpio_functions = [0] * 5
 
-        self.reg_gpio_pins[0] = 0
-        self.reg_gpio_pins[1] = 0
-        self.reg_gpio_pins[2] = 0
-        self.reg_gpio_pins[3] = 0
-        self.reg_gpio_pins[4] = 0
-
-        self.gpio_functions[0] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_AE_GPIO_1=8, SELF_TEST_BUSY=11,
-                                   SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-        self.gpio_functions[1] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, HSYNC=8, OUTPUT_AE_GPIO_0=9, SELF_TEST_BUSY=11,
-                                   SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-        self.gpio_functions[2] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, VSYNC_EXTSYNC=8, OUTPUT_AE_GPIO_1=9, SELF_TEST_BUSY=11,
-                                   SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-        self.gpio_functions[3] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_UART_TX=8, OUTPUT_AE_GPIO_0=9, SELF_TEST_BUSY=11,
-                                   SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-        self.gpio_functions[4] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_UART_TX=8, OUTPUT_AE_GPIO_1=9, SELF_TEST_BUSY=11,
-                                   SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-        
-           
+        self.gpio_functions[0] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_AE_GPIO_1=8, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
+        self.gpio_functions[1] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, HSYNC=8, OUTPUT_AE_GPIO_0=9, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
+        self.gpio_functions[2] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, VSYNC_EXTSYNC=8, OUTPUT_AE_GPIO_1=9, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
+        self.gpio_functions[3] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_UART_TX=8, OUTPUT_AE_GPIO_0=9, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
+        self.gpio_functions[4] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_UART_TX=8, OUTPUT_AE_GPIO_1=9, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
 #endregion
 
 # region u48 GPIO Controls Usage Revision 8: AX54A, AX80A
@@ -129,18 +116,9 @@ class u48_GPIOControls:
         self.reg_gpio_pins = [0] * 3
         self.gpio_functions = [0] * 3
 
-        self.reg_gpio_pins[0] = 0
-        self.reg_gpio_pins[1] = 0
-        self.reg_gpio_pins[2] = 0
-
-        self.gpio_functions[0] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, HSYNC=8, OUTPUT_AE_GPIO_0=9, SELF_TEST_BUSY=11,
-                                SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-        self.gpio_functions[1] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, VSYNC_EXTSYNC=8, OUTPUT_AE_GPIO_1=9, SELF_TEST_BUSY=11,
-                                SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-        self.gpio_functions[2] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_UART_TX=8, OUTPUT_AE_GPIO_1=9, SELF_TEST_BUSY=11,
-                                SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-
-
+        self.gpio_functions[0] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, HSYNC=8, OUTPUT_AE_GPIO_0=9, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
+        self.gpio_functions[1] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, VSYNC_EXTSYNC=8, OUTPUT_AE_GPIO_1=9, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
+        self.gpio_functions[2] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_UART_TX=8, OUTPUT_AE_GPIO_1=9, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
 #endregion
 
 # region u48 GPIO Controls Usage Revision 9: AX198A
@@ -149,22 +127,10 @@ class u48_GPIOControls:
         # A list of registers supported by this usage revision
         self.reg_gpio_pins = [0] * 5
         self.gpio_functions = [0] * 5
-        
-        self.reg_gpio_pins[0] = 0
-        self.reg_gpio_pins[1] = 0
-        self.reg_gpio_pins[2] = 0
-        self.reg_gpio_pins[3] = 0
-        self.reg_gpio_pins[4] = 0
 
-        self.gpio_functions[0] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_AE_GPIO_1=8, SELF_TEST_BUSY=11,
-                                SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-        self.gpio_functions[1] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, HSYNC=8, OUTPUT_AE_GPIO_0=9, SELF_TEST_BUSY=11,
-                                SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-        self.gpio_functions[2] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, VSYNC_EXTSYNC=8, OUTPUT_AE_GPIO_1=9, SELF_TEST_BUSY=11,
-                                SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-        self.gpio_functions[3] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_UART_TX=8, VSYNC_EXTSYNC=9, OUTPUT_AE_GPIO_0=10,
-                                SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-        self.gpio_functions[4] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_UART_TX=8, VSYNC_EXTSYNC=9, OUTPUT_AE_GPIO_1=10, 
-                                SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
-
+        self.gpio_functions[0] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_AE_GPIO_1=8, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
+        self.gpio_functions[1] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, HSYNC=8, OUTPUT_AE_GPIO_0=9, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
+        self.gpio_functions[2] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, VSYNC_EXTSYNC=8, OUTPUT_AE_GPIO_1=9, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
+        self.gpio_functions[3] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_UART_TX=8, VSYNC_EXTSYNC=9, OUTPUT_AE_GPIO_0=10, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
+        self.gpio_functions[4] = dict(LOW=0, HIGH=1, INPUT_PULLUP=3, INPUT_HIZ=4, OUTPUT_UART_TX=8, VSYNC_EXTSYNC=9, OUTPUT_AE_GPIO_1=10, SELF_TEST_BUSY=11, SELF_TEST_STATUS=12, HEARTBEAT=13, HOVER_PROX=14, AE_CLIPPING=16)
 #endregion
