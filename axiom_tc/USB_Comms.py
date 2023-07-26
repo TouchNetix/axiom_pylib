@@ -78,8 +78,8 @@ class USB_Comms:
 
         # usb_devices will be empty here if we didn't find any USB bridges
         if len(usb_devices) == 0:
-            print("ERROR: Did not find a TNx USB-Bridge Connected.")
-            raise ConnectionError
+            print("ERROR: Did not find a Protocol Bridge.")
+            sys.exit(1)
 
         else:
             if self.__verbose:
@@ -117,7 +117,7 @@ class USB_Comms:
             try:  #Fail gracefully if the USB object can't be acquired
                 if self.__device: pass
             except AttributeError:
-                print("ERROR: USB device could not be acquired.")
+                print("ERROR: USB device could not be acquired. The device might already in use.")
                 sys.exit(1)
 
     def stop_bridge(self):
