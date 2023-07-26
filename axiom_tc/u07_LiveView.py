@@ -417,3 +417,15 @@ class u07_LiveView:
         print("    Abs Noise   : %12s%% %12s%% %12s%%" % (self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[0]),   self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[1]),   self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[2])))
         print("    Aux Noise   : %12s%% %12s%% %12s%%" % (self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[0]),   self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[1]),   self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[2])))
 #endregion
+
+#region u07 Live View Usage Revision 7
+# There is no difference in the structure between u07 revision 6 and revision 7
+    def _init_registers_uifrev7(self):
+        self._init_registers_uifrev6()
+
+    def _unpack_uifrev7(self):
+        self._unpack_uifrev6()
+
+    def _print_registers_uifrev7(self):
+        self._print_registers_uifrev6()
+#endregion
