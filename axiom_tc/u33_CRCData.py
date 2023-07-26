@@ -40,18 +40,9 @@ class u33_CRCData:
         self._usage_binary_data = self._axiom.read_usage(self.USAGE_ID)
         self._unpack()
 
-    def write(self, write_to_nvm=False):
-        self._pack()
-        if write_to_nvm == True:
-            self._axiom.system_manager_command(self._axiom.SYSMGR_CMD_STOP)
-
-        self._axiom.config_write_usage_to_device(self.USAGE_ID, self._usage_binary_data)
-
-        if write_to_nvm == True:
-            self._axiom.system_manager_command(self._axiom.SYSMGR_CMD_SAVE_CONFIG)
-            sleep(0.1)
-        
+    def write(self):
         self.read()
+        raise Exception("Cannot write to u33. u33 is a read-only usage.")
 
     def print(self):
         self._print_registers()

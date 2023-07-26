@@ -20,6 +20,8 @@ This library provides users the building blocks to communicate with the aXiom to
 
 `u07_LiveView.py` - Provides access to read live data from aXiom. For instance GPIO status, acqusition status and self test status.
 
+`u32_DeviceCapabilities.py` - Reports the capabilities of the aXiom device. For instance, the number CTS nodes, which comms interfaces are supported etc.
+
 `u33_CRCData.py` - Provides access to the CRCs within aXiom.
 
 `u48_GPIOControls.py` - Provides access to the GPIO controls for aXiom.
