@@ -56,25 +56,24 @@ class USB_Comms:
 
     ATMEL_VENDOR_ID = 0x03EB
     ST_VENDOR_ID    = 0x0483
+    GD_VENDOR_ID    = 0x28E9
+    VENDOR_ID       = [ATMEL_VENDOR_ID, ST_VENDOR_ID, GD_VENDOR_ID]
     PRODUCT_ID      = [0x6f02, 0x2f04, 0x2f08]
     EMPTY_PKT = [0] * MAX_WR_BUFFER_SIZE
     RD_TIMEOUT = 100
     MAX_TBP_STOP_RETRY = 2
 
-
     def __init__(self, verbose=False):
-
-        # PB009 has different VID to PB005 and PB007, so need to check for both
-        # Check for ATMEL VID first
-        usb_devices = hid.enumerate(self.ATMEL_VENDOR_ID)
-        self.max_length = 0
-        self.__verbose = verbose
-
-        # Didn't find an ATMEL bridge so now check for ST VID
-        if len(usb_devices) == 0:
-            usb_devices = hid.enumerate(self.ST_VENDOR_ID)
+        # Check for a connected bridge
+        # If multiple bridges are connected, the priority is as follows:
+        # ATMEL -> ST -> GD
+        for VID in self.VENDOR_ID:
+            usb_devices = hid.enumerate(VID)
             self.max_length = 0
             self.__verbose = verbose
+            if len(usb_devices) != 0:
+                # USB Bridge found
+                break
 
         # usb_devices will be empty here if we didn't find any USB bridges
         if len(usb_devices) == 0:
