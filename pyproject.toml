@@ -22,7 +22,6 @@ classifiers = [
 requires-python = ">=3.8"
 
 [project.urls]
-homepage = "https://www.touchnetix.com/"
-repository = "https://github.com/TouchNetix/axiom_pylib"
-documentation = "https://github.com/TouchNetix/axiom_pylib/wiki"
-issue-tracker = "https://github.com/TouchNetix/axiom_pylib/issues"
+Homepage = "https://www.touchnetix.com/"
+Repository = "https://github.com/TouchNetix/axiom_pylib"
+#Documentation = "https://github.com/TouchNetix/axiom_pylib/wiki"
