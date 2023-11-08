@@ -1,6 +1,28 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
+requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "axiom_tc"
+version = "4.8.0"
+description = "Python library for TouchNetix aXiom Touch Controllers"
+license = { text = "MIT" }
+readme = "README.md"
+authors = [
+    { name="Mark Satterthwaite", email="mark.satterthwaite@touchnetix.com"},
+    { name="James Cameron", email="james.cameron@touchnetix.com"},
+    { name="Hannah Rossiter", email="hannah.rossiter@touchnetix.com"},
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.8"
+
+[project.urls]
+homepage = "https://www.touchnetix.com/"
+repository = "https://github.com/TouchNetix/axiom_pylib"
+documentation = "https://github.com/TouchNetix/axiom_pylib/wiki"
+issue-tracker = "https://github.com/TouchNetix/axiom_pylib/issues"
