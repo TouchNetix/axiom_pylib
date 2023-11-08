@@ -187,3 +187,37 @@ class u02_SystemManager:
         print("  Parameters[1] : %04X" % self.reg_parameters[1])
         print("  Parameters[2] : %04X" % self.reg_parameters[2])
 #endregion
+
+# region u02 System Manager Usage Revision 2
+    def _init_registers_uifrev2(self):
+        self.reg_command = 0
+        self.reg_parameters = [0] * 3
+
+    def _unpack_uifrev2(self):
+        command, param0, param1, param2 = struct.unpack("<4H", bytes(bytearray(self._usage_binary_data[0:8])))
+        self.reg_command = command
+        self.reg_parameters[0] = param0
+        self.reg_parameters[1] = param1
+        self.reg_parameters[2] = param2
+
+    def _pack_uifrev2(self):
+        # Convert the usage binary data into a byte array for struct pack to work
+        usage_as_bytearray = bytearray(self._usage_binary_data)
+
+        fields = [0] * 4
+        fields[0] = self.reg_command
+        fields[1] = self.reg_parameters[0]
+        fields[2] = self.reg_parameters[1]
+        fields[3] = self.reg_parameters[2]
+        struct.pack_into("<4H", usage_as_bytearray, 0, *fields)
+
+        # Convert the binary usage data into a list
+        self._usage_binary_data = list(usage_as_bytearray)
+
+    def _print_registers_uifrev2(self):
+        print("u02 System Manager")
+        print("  Command       : %04X" % self.reg_command)
+        print("  Parameters[0] : %04X" % self.reg_parameters[0])
+        print("  Parameters[1] : %04X" % self.reg_parameters[1])
+        print("  Parameters[2] : %04X" % self.reg_parameters[2])
+#endregion

@@ -65,7 +65,6 @@ class axiom:
 
         for pg in range(0, self.__usage_table[usage].num_pages):
             read_length = self.PAGE_SIZE
-
             # Calculate the remaining data to read for the last page
             if pg == (self.__usage_table[usage].num_pages - 1):
                 read_length = self.__usage_table[usage].length - (self.PAGE_SIZE * pg)
@@ -74,7 +73,6 @@ class axiom:
 
             if self.__verbose: print("AX Reading Target Address: 0x%x, for usage 0x%x, length %d" % (target_address, usage, read_length))
             usage_content += self.__comms.read_page(target_address, read_length)
-
         return usage_content
 
 
@@ -255,11 +253,18 @@ class axiom:
         silicon_id   = (int(buffer[9]) << 8) + int(buffer[8])
         silicon_rev  = chr(0x41 + (buffer[11] & 0xf))
 
-        print("  Device ID   : AX%u%c " % (device_channel_count, chr(0x41 + device_variant)))
-        print("  FW Revision : %d.%02d (RC%d)" % ( fw_ver_major, fw_ver_minor, fw_ver_rc))
-        print("  BL Revision : %d.%02d" % (bl_ver_major, bl_ver_minor))
-        print("  Silicon     : 0x%04X (Rev %c)" % (silicon_id, silicon_rev))
-        print("")
+        if (fw_ver_major == 4 and fw_ver_minor < 8) or fw_ver_major < 4:
+            print("  Device ID   : AX%u%c " % (device_channel_count, chr(0x41 + device_variant)))
+            print("  FW Revision : %d.%02d (RC%d)" % ( fw_ver_major, fw_ver_minor, fw_ver_rc))
+            print("  BL Revision : %d.%02d" % (bl_ver_major, bl_ver_minor))
+            print("  Silicon     : 0x%04X (Rev %c)" % (silicon_id, silicon_rev))
+            print("")
+        else:
+            print("  Device ID   : AX%u%c " % (device_id, chr(0x41 + device_variant)))
+            print("  FW Revision : %d.%d.%d" % ( fw_ver_major, fw_ver_minor, fw_ver_rc))
+            print("  BL Revision : %d.%02d" % (bl_ver_major, bl_ver_minor))
+            print("  Silicon     : 0x%04X (Rev %c)" % (silicon_id, silicon_rev))
+            print("")
 
     def get_u31_device_info(self):
         return self.__comms.read_page(0x0, 12)
