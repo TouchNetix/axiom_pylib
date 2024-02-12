@@ -30,9 +30,8 @@ class axiom:
                          0x93, # AE Profile
                          0x94] # Delta scale map
 
-    def __init__(self, comms, read_usage_table=True, verbose=False):
+    def __init__(self, comms, read_usage_table=True):
         self._comms   = comms
-        self._verbose = verbose
 
         # Pass the axiom object into comms for access to axiom data and methods
         comms.comms_init(self)
@@ -48,12 +47,11 @@ class axiom:
             read_length = self.u31.PAGE_SIZE
             # Calculate the remaining data to read for the last page
             if pg == (self.u31._usage_table[usage].num_pages - 1):
-                read_length = self.u31._usage_table[usage].length - (self.PAGE_SIZE * pg)
+                read_length = self.u31._usage_table[usage].length - (self.u31.PAGE_SIZE * pg)
 
             target_address = self.u31.convert_usage_to_target_address(usage, pg)
-
-            if self._verbose: print("AX Reading Target Address: 0x%x, for usage 0x%x, length %d" % (target_address, usage, read_length))
             usage_content += self._comms.read_page(target_address, read_length)
+
         return usage_content
 
 
@@ -65,13 +63,12 @@ class axiom:
 
             # Calculate the remaining data to read for the last page
             if pg == (self.u31._usage_table[usage].num_pages - 1):
-                write_length = self._usage_table[usage].length - (self.PAGE_SIZE * pg)
+                write_length = self.get_usage_length(usage) - (self.u31.PAGE_SIZE * pg)
 
             buffer_offset_end = buffer_offset + write_length
             target_address = self.u31.convert_usage_to_target_address(usage, pg)
-            if self._verbose: print("AX Writing Target Address: 0x%x" % target_address)
-            self._comms.write_page(target_address, write_length, buffer[buffer_offset:buffer_offset_end])
 
+            self._comms.write_page(target_address, write_length, buffer[buffer_offset:buffer_offset_end])
             self.u02.check_usage_write_progress(usage)
 
             buffer_offset += self.u31.PAGE_SIZE
@@ -174,8 +171,6 @@ class axiom:
 
         # Write the header data from the file
         self._comms.write_page(self.BLP_FIFO_ADDRESS, len(header), header)
-        if self._verbose:
-            print("wrote header %d bytes" % len(header))
 
         # Ensure aXiom is available to process our request
         current_timeout = 0
@@ -202,8 +197,8 @@ class axiom:
                 chunk_size = (self.u31.PAGE_SIZE-1) - self._comms.AX_HEADER_LEN
             else:
                 chunk_size = (self._comms.wMaxPacketSize-1) \
-                         - self._comms.AX_TBP_I2C_DEV_HEAD_LEN \
-                         - self._comms.AX_HEADER_LEN
+                        - self._comms.AX_TBP_I2C_DEV_HEAD_LEN \
+                        - self._comms.AX_HEADER_LEN
         except:
             chunk_size = self.u31.PAGE_SIZE-1
 
@@ -221,8 +216,6 @@ class axiom:
 
             # Send the data to aXiom
             self._comms.write_page(self.BLP_FIFO_ADDRESS, length_to_write, payload_chunk)
-            if self._verbose:
-                print("wrote %d bytes" % length_to_write)
 
             # Ensure aXiom is available to process our request
             current_timeout = 0
@@ -236,8 +229,6 @@ class axiom:
                 busy_time += 1
                 sleep(0.001)
             offset += length_to_write
-        if self._verbose:
-            print("busy_time was %d" % busy_time)
 
     def close(self):
         self._comms.close()

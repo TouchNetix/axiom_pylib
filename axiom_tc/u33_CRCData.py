@@ -52,62 +52,71 @@ class u33_CRCData:
 
 #region u33 Specific Methods
     def compare_u33(self, other_u33, print_results = False):
-        config_nvm_crc_check = True if self.reg_nvltl_usage_config_crc      == other_u33.reg_nvltl_usage_config_crc      else False
-        config_ram_crc_check = True if self.reg_vltl_usage_config_crc       == other_u33.reg_vltl_usage_config_crc       else False
-        config_u22_crc_check = True if self.reg_u22_sequence_data_cdu_crc   == other_u33.reg_u22_sequence_data_cdu_crc   else False
-        config_u43_crc_check = True if self.reg_u43_hotspots_cdu_crc        == other_u33.reg_u43_hotspots_cdu_crc        else False
-        config_u93_crc_check = True if self.reg_u93_profiles_cdu_crc        == other_u33.reg_u93_profiles_cdu_crc        else False
-        config_u94_crc_check = True if self.reg_u94_delta_scale_map_cdu_crc == other_u33.reg_u94_delta_scale_map_cdu_crc else False
+        overall_u33_ok = True
+        do_u22_check = self._axiom.u31.is_usage_present_on_device(0x22)
+        do_u43_check = self._axiom.u31.is_usage_present_on_device(0x43)
+        do_u77_check = self._axiom.u31.is_usage_present_on_device(0x77)
+        do_u93_check = self._axiom.u31.is_usage_present_on_device(0x93)
+        do_u94_check = self._axiom.u31.is_usage_present_on_device(0x94)
 
-        # u77 was added to u33 rev3
-        if self._usage_revision < 3 and other_u33._usage_revision < 3:
-            # Skip check, u77 is not present in either u33
-            config_u77_crc_check      = True
-            config_u77_crc_check_skip = True
-            this_u77_crc  = 0
-            other_u77_crc = 0
-        elif self._usage_revision >= 3 and other_u33._usage_revision >= 3:
-            # Do check, u77 is present in both u33
-            config_u77_crc_check      = True if self.reg_u77_dod_calibration_data_crc == other_u33.reg_u77_dod_calibration_data_crc else False
-            config_u77_crc_check_skip = False
-            this_u77_crc  = self.reg_u77_dod_calibration_data_crc
-            other_u77_crc = other_u33.reg_u77_dod_calibration_data_crc
-        elif self._usage_revision < 3 or other_u33._usage_revision >= 3:
-            # Do something, u77 is not present on the device, but is present in the file
-            config_u77_crc_check      = True
-            config_u77_crc_check_skip = False
-            this_u77_crc  = 0
-            other_u77_crc = other_u33.reg_u77_dod_calibration_data_crc
-        elif self._usage_revision >= 3 or other_u33._usage_revision < 3:
-            # Do something, u77 is present on the device, but is not present in the file
-            config_u77_crc_check      = True
-            config_u77_crc_check_skip = False
-            this_u77_crc  = self.reg_u77_dod_calibration_data_crc
-            other_u77_crc = 0
+        cfg_nvm_crc_ok = self.reg_nvltl_usage_config_crc == other_u33.reg_nvltl_usage_config_crc
+        if not cfg_nvm_crc_ok:
+            overall_u33_ok = False
+
+        cfg_vltl_crc_ok = self.reg_vltl_usage_config_crc == other_u33.reg_vltl_usage_config_crc 
+        if not cfg_vltl_crc_ok:
+            overall_u33_ok = False
 
         if print_results:
-            print("u33 Comparison            %10s - %10s" % ("Device".center(10), "File".center(10)))
-            print("NVM Usage Config CRC         : 0x%08X - 0x%08X - %s" % (self.reg_nvltl_usage_config_crc,      other_u33.reg_nvltl_usage_config_crc,      "OK" if config_nvm_crc_check else "MISMATCHED"))
-            print("RAM Usage Config CRC         : 0x%08X - 0x%08X - %s" % (self.reg_vltl_usage_config_crc,       other_u33.reg_vltl_usage_config_crc,       "OK" if config_ram_crc_check else "MISMATCHED"))
-            print("u22 Sequence Data CRC        : 0x%08X - 0x%08X - %s" % (self.reg_u22_sequence_data_cdu_crc,   other_u33.reg_u22_sequence_data_cdu_crc,   "OK" if config_u22_crc_check else "MISMATCHED"))
-            print("u43 Hotspots CRC             : 0x%08X - 0x%08X - %s" % (self.reg_u43_hotspots_cdu_crc,        other_u33.reg_u43_hotspots_cdu_crc,        "OK" if config_u43_crc_check else "MISMATCHED"))
+            print("u33 Comparison                 %10s - %10s" % ("Device".center(10), "File".center(10)))
 
-            if config_u77_crc_check_skip == False:
-                print("u77 DoD Calibration Data CRC : 0x%08X - 0x%08X - %s" % (this_u77_crc,        other_u77_crc,        "OK" if config_u77_crc_check else "MISMATCHED"))    
+            firmware_crc_ok = self.reg_runtime_crc == other_u33.reg_runtime_crc
+            print("Firmware CRC                 : 0x%08X - 0x%08X - %s" % (self.reg_runtime_crc, other_u33.reg_runtime_crc, "OK" if firmware_crc_ok else "Config file saved from different version of firmware!"))
+            print("Firmware Hash                : 0x%08X - 0x%08X" % (self.reg_runtime_hash, other_u33.reg_runtime_hash))
+            print("NVM Usage Config CRC         : 0x%08X - 0x%08X - %s" % (self.reg_nvltl_usage_config_crc, other_u33.reg_nvltl_usage_config_crc, "OK" if cfg_nvm_crc_ok else "MISMATCHED"))
+            print("RAM Usage Config CRC         : 0x%08X - 0x%08X - %s" % (self.reg_vltl_usage_config_crc, other_u33.reg_vltl_usage_config_crc, "OK" if cfg_vltl_crc_ok else "MISMATCHED"))
 
-            print("u93 Profiles CRC             : 0x%08X - 0x%08X - %s" % (self.reg_u93_profiles_cdu_crc,        other_u33.reg_u93_profiles_cdu_crc,        "OK" if config_u93_crc_check else "MISMATCHED"))
-            print("u94 Delta Scale Map CRC      : 0x%08X - 0x%08X - %s" % (self.reg_u94_delta_scale_map_cdu_crc, other_u33.reg_u94_delta_scale_map_cdu_crc, "OK" if config_u94_crc_check else "MISMATCHED"))
+        if do_u22_check:
+            u22_ok = self.reg_u22_sequence_data_cdu_crc == other_u33.reg_u22_sequence_data_cdu_crc
+            if not u22_ok:
+                overall_u33_ok = False
+            if print_results:
+                print("u22 Sequence Data CRC        : 0x%08X - 0x%08X - %s" % (self.reg_u22_sequence_data_cdu_crc, other_u33.reg_u22_sequence_data_cdu_crc, "OK" if u22_ok else "MISMATCHED"))
 
-        if (config_nvm_crc_check and
-            config_ram_crc_check and
-            config_u22_crc_check and
-            config_u43_crc_check and
-            config_u77_crc_check and
-            config_u93_crc_check and
-            config_u94_crc_check):
-            return True
-        else:
-            return False
+        if do_u43_check:
+            u43_ok = self.reg_u43_hotspots_cdu_crc == other_u33.reg_u43_hotspots_cdu_crc
+            if not u43_ok:
+                overall_u33_ok = False
+            if print_results:
+                print("u43 Hotspots CRC             : 0x%08X - 0x%08X - %s" % (self.reg_u43_hotspots_cdu_crc, other_u33.reg_u43_hotspots_cdu_crc, "OK" if u43_ok else "MISMATCHED"))
+
+        if do_u77_check:
+            if other_u33._usage_revision < 3:
+                # The "other" u33 doesn't contain u77, skip it and assume CRC is OK
+                if print_results:
+                    print("u77 DoD Calibration Data CRC : 0x%08X - NOTPRESENT - SKIPPED" % (self.reg_u77_dod_calibration_data_crc))
+            else:
+                u77_ok = self.reg_u77_dod_calibration_data_crc == other_u33.reg_u77_dod_calibration_data_crc
+                if not u77_ok:
+                    overall_u33_ok = False
+                if print_results:
+                    print("u77 DoD Calibration Data CRC : 0x%08X - 0x%08X - %s" % (self.reg_u77_dod_calibration_data_crc, other_u33.reg_u77_dod_calibration_data_crc, "OK" if u77_ok else "MISMATCHED"))
+
+        if do_u93_check:
+            u93_ok = self.reg_u93_profiles_cdu_crc == other_u33.reg_u93_profiles_cdu_crc
+            if not u93_ok:
+                overall_u33_ok = False
+            if print_results:
+                print("u93 Profiles CRC             : 0x%08X - 0x%08X - %s" % (self.reg_u93_profiles_cdu_crc, other_u33.reg_u93_profiles_cdu_crc, "OK" if u93_ok else "MISMATCHED"))
+
+        if do_u94_check:
+            u94_ok = self.reg_u94_delta_scale_map_cdu_crc == other_u33.reg_u94_delta_scale_map_cdu_crc
+            if not u93_ok:
+                overall_u33_ok = False
+            if print_results:
+                print("u94 Delta Scale Map CRC      : 0x%08X - 0x%08X - %s" % (self.reg_u94_delta_scale_map_cdu_crc, other_u33.reg_u94_delta_scale_map_cdu_crc, "OK" if u94_ok else "MISMATCHED"))
+
+        return overall_u33_ok  
 #endregion
 
 #region u33 Usage Name Usage Revision 2
@@ -143,10 +152,18 @@ class u33_CRCData:
         print("  Bootloader CRC          : 0x{:08X}".format(self.reg_bootloader_crc))
         print("  NVM Usage Config CRC    : 0x{:08X}".format(self.reg_nvltl_usage_config_crc))
         print("  RAM Usage Config CRC    : 0x{:08X}".format(self.reg_vltl_usage_config_crc))
-        print("  u22 Sequence Data CRC   : 0x{:08X}".format(self.reg_u22_sequence_data_cdu_crc))
-        print("  u43 Hotspots CRC        : 0x{:08X}".format(self.reg_u43_hotspots_cdu_crc))
-        print("  u93 Profiles CRC        : 0x{:08X}".format(self.reg_u93_profiles_cdu_crc))
-        print("  u94 Delta Scale Map CRC : 0x{:08X}".format(self.reg_u94_delta_scale_map_cdu_crc))
+
+        if self._axiom.u31.is_usage_present_on_device(0x22):
+            print("  u22 Sequence Data CRC   : 0x{:08X}".format(self.reg_u22_sequence_data_cdu_crc))
+
+        if self._axiom.u31.is_usage_present_on_device(0x43):
+            print("  u43 Hotspots CRC        : 0x{:08X}".format(self.reg_u43_hotspots_cdu_crc))
+        
+        if self._axiom.u31.is_usage_present_on_device(0x93):
+            print("  u93 Profiles CRC        : 0x{:08X}".format(self.reg_u93_profiles_cdu_crc))
+        
+        if self._axiom.u31.is_usage_present_on_device(0x94):
+            print("  u94 Delta Scale Map CRC : 0x{:08X}".format(self.reg_u94_delta_scale_map_cdu_crc))
         print("  Runtime Hash            : 0x{:08X}".format(self.reg_runtime_hash))
 #endregion
 
@@ -185,10 +202,20 @@ class u33_CRCData:
         print("  Bootloader CRC               : 0x{:08X}".format(self.reg_bootloader_crc))
         print("  NVM Usage Config CRC         : 0x{:08X}".format(self.reg_nvltl_usage_config_crc))
         print("  RAM Usage Config CRC         : 0x{:08X}".format(self.reg_vltl_usage_config_crc))
-        print("  u22 Sequence Data CRC        : 0x{:08X}".format(self.reg_u22_sequence_data_cdu_crc))
-        print("  u43 Hotspots CRC             : 0x{:08X}".format(self.reg_u43_hotspots_cdu_crc))
-        print("  u77 DoD Calibration Data CRC : 0x{:08X}".format(self.reg_u77_dod_calibration_data_crc))
-        print("  u93 Profiles CRC             : 0x{:08X}".format(self.reg_u93_profiles_cdu_crc))
-        print("  u94 Delta Scale Map CRC      : 0x{:08X}".format(self.reg_u94_delta_scale_map_cdu_crc))
+
+        if self._axiom.u31.is_usage_present_on_device(0x22):
+            print("  u22 Sequence Data CRC        : 0x{:08X}".format(self.reg_u22_sequence_data_cdu_crc))
+
+        if self._axiom.u31.is_usage_present_on_device(0x43):
+            print("  u43 Hotspots CRC             : 0x{:08X}".format(self.reg_u43_hotspots_cdu_crc))
+
+        if self._axiom.u31.is_usage_present_on_device(0x77):
+            print("  u77 DoD Calibration Data CRC : 0x{:08X}".format(self.reg_u77_dod_calibration_data_crc))
+
+        if self._axiom.u31.is_usage_present_on_device(0x93):
+            print("  u93 Profiles CRC             : 0x{:08X}".format(self.reg_u93_profiles_cdu_crc))
+
+        if self._axiom.u31.is_usage_present_on_device(0x94):
+            print("  u94 Delta Scale Map CRC      : 0x{:08X}".format(self.reg_u94_delta_scale_map_cdu_crc))
         print("  Runtime Hash                 : 0x{:08X}".format(self.reg_runtime_hash))
 #endregion

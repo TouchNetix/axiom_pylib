@@ -130,6 +130,16 @@ class u31_DeviceInformation:
         else:
             target_address = (self._usage_table[usage].start_page << 8) + (page << 8)
         return target_address
+    
+    def is_usage_present_on_device(self, usage):
+        """
+        Determine if a usage is present in the connected device's usage table. Not all usages are present on all
+        firmware builds. For instance, the 2D firmware contains a subset of usages that the 3D firmware supports.
+
+        Returns:
+        bool: True if the usage is present, otherwise False.
+        """
+        return usage in self._usage_table
 #endregion
 
 #region u31 Usage Name Usage Revision 1
