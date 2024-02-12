@@ -52,26 +52,57 @@ class u33_CRCData:
 
 #region u33 Specific Methods
     def compare_u33(self, other_u33, print_results = False):
-        config_nvm_crc_check = True if self.reg_nvltl_usage_config_crc      == other_u33.reg_nvltl_usage_config_crc else False
-        config_ram_crc_check = True if self.reg_vltl_usage_config_crc       == other_u33.reg_vltl_usage_config_crc else False
-        config_u22_crc_check = True if self.reg_u22_sequence_data_cdu_crc   == other_u33.reg_u22_sequence_data_cdu_crc else False
-        config_u43_crc_check = True if self.reg_u43_hotspots_cdu_crc        == other_u33.reg_u43_hotspots_cdu_crc else False
-        config_u93_crc_check = True if self.reg_u93_profiles_cdu_crc        == other_u33.reg_u93_profiles_cdu_crc else False
+        config_nvm_crc_check = True if self.reg_nvltl_usage_config_crc      == other_u33.reg_nvltl_usage_config_crc      else False
+        config_ram_crc_check = True if self.reg_vltl_usage_config_crc       == other_u33.reg_vltl_usage_config_crc       else False
+        config_u22_crc_check = True if self.reg_u22_sequence_data_cdu_crc   == other_u33.reg_u22_sequence_data_cdu_crc   else False
+        config_u43_crc_check = True if self.reg_u43_hotspots_cdu_crc        == other_u33.reg_u43_hotspots_cdu_crc        else False
+        config_u93_crc_check = True if self.reg_u93_profiles_cdu_crc        == other_u33.reg_u93_profiles_cdu_crc        else False
         config_u94_crc_check = True if self.reg_u94_delta_scale_map_cdu_crc == other_u33.reg_u94_delta_scale_map_cdu_crc else False
+
+        # u77 was added to u33 rev3
+        if self._usage_revision < 3 and other_u33._usage_revision < 3:
+            # Skip check, u77 is not present in either u33
+            config_u77_crc_check      = True
+            config_u77_crc_check_skip = True
+            this_u77_crc  = 0
+            other_u77_crc = 0
+        elif self._usage_revision >= 3 and other_u33._usage_revision >= 3:
+            # Do check, u77 is present in both u33
+            config_u77_crc_check      = True if self.reg_u77_dod_calibration_data_crc == other_u33.reg_u77_dod_calibration_data_crc else False
+            config_u77_crc_check_skip = False
+            this_u77_crc  = self.reg_u77_dod_calibration_data_crc
+            other_u77_crc = other_u33.reg_u77_dod_calibration_data_crc
+        elif self._usage_revision < 3 or other_u33._usage_revision >= 3:
+            # Do something, u77 is not present on the device, but is present in the file
+            config_u77_crc_check      = True
+            config_u77_crc_check_skip = False
+            this_u77_crc  = 0
+            other_u77_crc = other_u33.reg_u77_dod_calibration_data_crc
+        elif self._usage_revision >= 3 or other_u33._usage_revision < 3:
+            # Do something, u77 is present on the device, but is not present in the file
+            config_u77_crc_check      = True
+            config_u77_crc_check_skip = False
+            this_u77_crc  = self.reg_u77_dod_calibration_data_crc
+            other_u77_crc = 0
 
         if print_results:
             print("u33 Comparison            %10s - %10s" % ("Device".center(10), "File".center(10)))
-            print("NVM Usage Config CRC    : 0x%08X - 0x%08X - %s" % (self.reg_nvltl_usage_config_crc,      other_u33.reg_nvltl_usage_config_crc,      "OK" if config_nvm_crc_check else "MISMATCHED"))
-            print("RAM Usage Config CRC    : 0x%08X - 0x%08X - %s" % (self.reg_vltl_usage_config_crc,       other_u33.reg_vltl_usage_config_crc,       "OK" if config_ram_crc_check else "MISMATCHED"))
-            print("u22 Sequence Data CRC   : 0x%08X - 0x%08X - %s" % (self.reg_u22_sequence_data_cdu_crc,   other_u33.reg_u22_sequence_data_cdu_crc,   "OK" if config_u22_crc_check else "MISMATCHED"))
-            print("u43 Hotspots CRC        : 0x%08X - 0x%08X - %s" % (self.reg_u43_hotspots_cdu_crc,        other_u33.reg_u43_hotspots_cdu_crc,        "OK" if config_u43_crc_check else "MISMATCHED"))
-            print("u93 Profiles CRC        : 0x%08X - 0x%08X - %s" % (self.reg_u93_profiles_cdu_crc,        other_u33.reg_u93_profiles_cdu_crc,        "OK" if config_u93_crc_check else "MISMATCHED"))
-            print("u94 Delta Scale Map CRC : 0x%08X - 0x%08X - %s" % (self.reg_u94_delta_scale_map_cdu_crc, other_u33.reg_u94_delta_scale_map_cdu_crc, "OK" if config_u94_crc_check else "MISMATCHED"))
+            print("NVM Usage Config CRC         : 0x%08X - 0x%08X - %s" % (self.reg_nvltl_usage_config_crc,      other_u33.reg_nvltl_usage_config_crc,      "OK" if config_nvm_crc_check else "MISMATCHED"))
+            print("RAM Usage Config CRC         : 0x%08X - 0x%08X - %s" % (self.reg_vltl_usage_config_crc,       other_u33.reg_vltl_usage_config_crc,       "OK" if config_ram_crc_check else "MISMATCHED"))
+            print("u22 Sequence Data CRC        : 0x%08X - 0x%08X - %s" % (self.reg_u22_sequence_data_cdu_crc,   other_u33.reg_u22_sequence_data_cdu_crc,   "OK" if config_u22_crc_check else "MISMATCHED"))
+            print("u43 Hotspots CRC             : 0x%08X - 0x%08X - %s" % (self.reg_u43_hotspots_cdu_crc,        other_u33.reg_u43_hotspots_cdu_crc,        "OK" if config_u43_crc_check else "MISMATCHED"))
+
+            if config_u77_crc_check_skip == False:
+                print("u77 DoD Calibration Data CRC : 0x%08X - 0x%08X - %s" % (this_u77_crc,        other_u77_crc,        "OK" if config_u77_crc_check else "MISMATCHED"))    
+
+            print("u93 Profiles CRC             : 0x%08X - 0x%08X - %s" % (self.reg_u93_profiles_cdu_crc,        other_u33.reg_u93_profiles_cdu_crc,        "OK" if config_u93_crc_check else "MISMATCHED"))
+            print("u94 Delta Scale Map CRC      : 0x%08X - 0x%08X - %s" % (self.reg_u94_delta_scale_map_cdu_crc, other_u33.reg_u94_delta_scale_map_cdu_crc, "OK" if config_u94_crc_check else "MISMATCHED"))
 
         if (config_nvm_crc_check and
             config_ram_crc_check and
             config_u22_crc_check and
             config_u43_crc_check and
+            config_u77_crc_check and
             config_u93_crc_check and
             config_u94_crc_check):
             return True
