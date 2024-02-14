@@ -135,7 +135,7 @@ class u31_DeviceInformation:
         else:
             print("Usage table not yet initialised")
 
-    def convert_usage_to_target_address(self, usage, page):
+    def convert_usage_to_target_address(self, usage, page=0):
         target_address = 0
         if(self._usage_table_populated == False and usage == 0x31):
             target_address = 0x0000 + (page << 8)
