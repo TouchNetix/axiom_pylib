@@ -72,6 +72,18 @@ class u31_DeviceInformation:
     def print_device_info(self):
         self._print_registers()
 
+    def get_device_info_short(self):
+        device_channel_count =  self.reg_device_id & 0x3FF
+        device_variant       = (self.reg_device_id & 0x7C00) >> 10
+
+        fw_status_str = "eng" if self.reg_fw_status == 0 else "prod"
+        if (self.reg_fw_major >= 4 and self.reg_fw_minor >= 8):
+            fw_ver = "%d.%d.%d-%s %s" % (self.reg_fw_major, self.reg_fw_minor, self.reg_fw_patch, fw_status_str, self.FW_VARIANTS[self.reg_fw_variant])
+        else:
+            fw_ver = "%d.%02d-%s (RC%d) %s" % (self.reg_fw_major, self.reg_fw_minor, fw_status_str, self.reg_fw_patch, self.FW_VARIANTS[self.reg_fw_variant])
+
+        return "AX%u%c %s" % (device_channel_count, chr(ord('A') + device_variant), fw_ver)
+
     def _unpack(self):
         self._unpack_registers()
 

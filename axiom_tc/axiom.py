@@ -27,6 +27,7 @@ class axiom:
     cdu_usage_list    = [0x05, # Comments
                          0x22, # Sequence Data
                          0x43, # Haptic Hotspots
+                         0x77, # Dial on Display
                          0x93, # AE Profile
                          0x94] # Delta scale map
 
