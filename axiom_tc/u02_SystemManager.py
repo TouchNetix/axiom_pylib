@@ -11,6 +11,7 @@ class u02_SystemManager:
     CMD_START            =    6
     CMD_SAVE_CONFIG      =    7
     CMD_COMPUTE_CRCS     =    9
+    CMD_FILL_CONFIG      =   10
     CMD_ENTER_BOOTLOADER =   11
     CMD_RUN_SELF_TESTS   =   12
 
@@ -89,6 +90,12 @@ class u02_SystemManager:
             self.reg_parameters[0] = 0xA55A
             self.write()
             sleep(0.2)
+        elif command == self.CMD_FILL_CONFIG:
+            # Fill the config area with zeros
+            self.reg_command = command
+            self.reg_parameters[0] = 0x5555
+            self.reg_parameters[1] = 0xAAAA
+            self.reg_parameters[2] = 0xA55A
         else:
             # Don't perform u02 verify reads for reset commands
             if (command == self.CMD_HARD_RESET or
