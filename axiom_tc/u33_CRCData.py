@@ -76,7 +76,7 @@ class u33_CRCData:
 
             firmware_crc_ok = self.reg_runtime_crc == other_u33.reg_runtime_crc
             print("  Firmware CRC                 : 0x%08X - 0x%08X - %s" % (self.reg_runtime_crc, other_u33.reg_runtime_crc, "OK" if firmware_crc_ok else "Config file saved from different version of firmware!"))
-            print("  Firmware Hash                : 0x%08X - 0x%08X" % (self.reg_runtime_hash, other_u33.reg_runtime_hash))
+            print("  Firmware Hash                : 0x%08X - 0x%08X - N/A" % (self.reg_runtime_hash, other_u33.reg_runtime_hash))
             print("  NVM Usage Config CRC         : 0x%08X - 0x%08X - %s" % (self.reg_nvltl_usage_config_crc, other_u33.reg_nvltl_usage_config_crc, "OK" if cfg_nvm_crc_ok else "MISMATCHED"))
             print("  RAM Usage Config CRC         : 0x%08X - 0x%08X - %s" % (self.reg_vltl_usage_config_crc, other_u33.reg_vltl_usage_config_crc, "OK" if cfg_vltl_crc_ok else "MISMATCHED"))
 
