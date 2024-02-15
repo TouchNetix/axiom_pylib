@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "axiom_tc"
-version = "4.8.0.0"
+version = "4.8.7.0"
 description = "Python library for TouchNetix aXiom Touch Controllers"
 license = { text = "MIT" }
 readme = "README.md"
