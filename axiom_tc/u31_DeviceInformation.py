@@ -25,6 +25,7 @@ class u31_DeviceInformation:
     PAGE_SIZE          = 256
 
     FW_VARIANTS = ["3D", "2D", "FORCE"]
+    FW_STATUS = ["eng", "prod"]
 
     def __init__(self, axiom, read = True, read_usage_table=True):
         self._axiom = axiom
@@ -73,16 +74,21 @@ class u31_DeviceInformation:
         self._print_registers()
 
     def get_device_info_short(self):
-        device_channel_count =  self.reg_device_id & 0x3FF
-        device_variant       = (self.reg_device_id & 0x7C00) >> 10
+        return self.convert_device_info_to_string(self.reg_device_id, self.reg_fw_variant, self.reg_fw_major, self.reg_fw_minor, self.reg_fw_patch, self.reg_fw_status)
 
-        fw_status_str = "eng" if self.reg_fw_status == 0 else "prod"
-        if (self.reg_fw_major >= 4 and self.reg_fw_minor >= 8):
-            fw_ver = "%d.%d.%d-%s %s" % (self.reg_fw_major, self.reg_fw_minor, self.reg_fw_patch, fw_status_str, self.FW_VARIANTS[self.reg_fw_variant])
+    def convert_device_info_to_string(self, device_id, fw_variant, fw_ver_major, fw_ver_minor, fw_ver_patch, fw_status):
+        return "%s %s" % (self.convert_device_id_to_string(device_id), self.convert_firmware_version_to_string(fw_ver_major, fw_ver_minor, fw_ver_patch, fw_status, fw_variant))
+    
+    def convert_firmware_version_to_string(self, major, minor, patch, status, fw_variant):
+        if (major >= 4 and minor >= 8):
+            return "%d.%d.%d-%s %s" % (major, minor, patch, self.FW_STATUS[status], self.FW_VARIANTS[fw_variant])
         else:
-            fw_ver = "%d.%02d-%s (RC%d) %s" % (self.reg_fw_major, self.reg_fw_minor, fw_status_str, self.reg_fw_patch, self.FW_VARIANTS[self.reg_fw_variant])
+            return "%d.%02d-%s (RC%d) %s" % (major, minor, self.FW_STATUS[status], patch, self.FW_VARIANTS[fw_variant])
 
-        return "AX%u%c %s" % (device_channel_count, chr(ord('A') + device_variant), fw_ver)
+    def convert_device_id_to_string(self, device_id):
+        device_channel_count =  device_id & 0x3FF
+        device_variant       = (device_id & 0x7C00) >> 10
+        return "AX%u%c" % (device_channel_count, chr(ord('A') + device_variant))
 
     def _unpack(self):
         self._unpack_registers()
@@ -193,18 +199,11 @@ class u31_DeviceInformation:
         self.reg_fw_patch    = (field5 & 0xF000) >> 12
 
     def _print_registers_uifrev1(self):
-        device_channel_count =  self.reg_device_id & 0x3FF
-        device_variant       = (self.reg_device_id & 0x7C00) >> 10
-
-        fw_status_str = "eng" if self.reg_fw_status == 0 else "prod"
         silicon_rev   = chr(0x41 + self.reg_silicon_rev)
 
         print("u31 Device Information")
-        print("  Device ID   : AX%u%c " % (device_channel_count, chr(0x41 + device_variant)))
-        if (self.reg_fw_major >= 4 and self.reg_fw_minor >= 8):
-            print("  FW Revision : %d.%d.%d-%s %s" % (self.reg_fw_major, self.reg_fw_minor, self.reg_fw_patch, fw_status_str, self.FW_VARIANTS[self.reg_fw_variant]))
-        else:
-            print("  FW Revision : %d.%02d-%s (RC%d) %s" % (self.reg_fw_major, self.reg_fw_minor, fw_status_str, self.reg_fw_patch, self.FW_VARIANTS[self.reg_fw_variant]))
+        print("  Device ID   : %s" % (self.convert_device_id_to_string(self.reg_device_id)))
+        print("  FW Revision : %s" % (self.convert_firmware_version_to_string(self.reg_fw_major, self.reg_fw_minor, self.reg_fw_patch, self.reg_fw_status, self.reg_fw_variant)))
         print("  BL Revision : %d.%02d" % (self.reg_bl_major, self.reg_bl_minor))
         print("  Silicon     : 0x%04X (Rev %c)" % (self.reg_jedec_id, silicon_rev))
 #endregion
