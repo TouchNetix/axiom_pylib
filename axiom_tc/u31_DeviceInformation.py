@@ -95,12 +95,15 @@ class u31_DeviceInformation:
 
 #region u31 Specific Methods
     def build_usage_table(self):
+        # Reset the usage table
+        self.max_report_len = 0
+        self._usage_table = {}
+        self._usage_table_populated = False
         self.read()
 
         # Veryify the device is not in bootloader mode
         if self.reg_mode != 0:
             print("Cannot build usage table, aXiom is in bootloader mode")
-            self._usage_table_populated = False
             return False
 
         target_address = self.convert_usage_to_target_address(0x31, 1)

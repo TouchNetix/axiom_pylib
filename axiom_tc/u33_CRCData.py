@@ -123,6 +123,59 @@ class u33_CRCData:
         return overall_u33_ok  
 #endregion
 
+#region u33 Usage Name Usage Revision 1
+    def _init_registers_uifrev1(self):
+        self.reg_runtime_crc                 = 0
+        self.reg_runtime_nvm_crc             = 0
+        self.reg_bootloader_crc              = 0
+        self.reg_nvltl_usage_config_crc      = 0
+        self.reg_vltl_usage_config_crc       = 0
+        self.reg_u05_commenrs_crc            = 0
+        self.reg_u22_sequence_data_cdu_crc   = 0
+        self.reg_u43_hotspots_cdu_crc        = 0
+        self.reg_u93_profiles_cdu_crc        = 0
+        self.reg_u94_delta_scale_map_cdu_crc = 0
+        self.reg_runtime_hash                = 0
+
+    def _unpack_uifrev1(self):
+        rt_crc, rt_nvm_crc, bl_crc, nvltl_config_crc, vltl_config_crc, u05_crc, u22_crc, u43_crc, u93_crc, u94_crc, hash = struct.unpack("<11I", bytes(bytearray(self._usage_binary_data[0:44])))
+        self.reg_runtime_crc                 = rt_crc
+        self.reg_runtime_nvm_crc             = rt_nvm_crc
+        self.reg_bootloader_crc              = bl_crc
+        self.reg_nvltl_usage_config_crc      = nvltl_config_crc
+        self.reg_vltl_usage_config_crc       = vltl_config_crc
+        self.reg_u05_commenrs_crc            = u05_crc
+        self.reg_u22_sequence_data_cdu_crc   = u22_crc
+        self.reg_u43_hotspots_cdu_crc        = u43_crc
+        self.reg_u93_profiles_cdu_crc        = u93_crc
+        self.reg_u94_delta_scale_map_cdu_crc = u94_crc
+        self.reg_runtime_hash                = hash
+
+    def _print_registers_uifrev1(self):
+        print("u33 CRC Data")
+        print("  Runtime CRC             : 0x{:08X}".format(self.reg_runtime_crc))
+        print("  Runtime NVM CRC         : 0x{:08X}".format(self.reg_runtime_nvm_crc))
+        print("  Bootloader CRC          : 0x{:08X}".format(self.reg_bootloader_crc))
+        print("  NVM Usage Config CRC    : 0x{:08X}".format(self.reg_nvltl_usage_config_crc))
+        print("  RAM Usage Config CRC    : 0x{:08X}".format(self.reg_vltl_usage_config_crc))
+
+        if self._axiom.u31.is_usage_present_on_device(0x05):
+            print("  u05 Comments CRC        : 0x{:08X}".format(self.reg_u05_commenrs_crc))
+
+        if self._axiom.u31.is_usage_present_on_device(0x22):
+            print("  u22 Sequence Data CRC   : 0x{:08X}".format(self.reg_u22_sequence_data_cdu_crc))
+
+        if self._axiom.u31.is_usage_present_on_device(0x43):
+            print("  u43 Hotspots CRC        : 0x{:08X}".format(self.reg_u43_hotspots_cdu_crc))
+        
+        if self._axiom.u31.is_usage_present_on_device(0x93):
+            print("  u93 Profiles CRC        : 0x{:08X}".format(self.reg_u93_profiles_cdu_crc))
+        
+        if self._axiom.u31.is_usage_present_on_device(0x94):
+            print("  u94 Delta Scale Map CRC : 0x{:08X}".format(self.reg_u94_delta_scale_map_cdu_crc))
+        print("  Runtime Hash            : 0x{:08X}".format(self.reg_runtime_hash))
+#endregion
+
 #region u33 Usage Name Usage Revision 2
     def _init_registers_uifrev2(self):
         self.reg_runtime_crc                 = 0
