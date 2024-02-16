@@ -96,6 +96,8 @@ class u02_SystemManager:
             self.reg_parameters[0] = 0x5555
             self.reg_parameters[1] = 0xAAAA
             self.reg_parameters[2] = 0xA55A
+            self.write()
+            sleep(0.1)
         else:
             # Don't perform u02 verify reads for reset commands
             if (command == self.CMD_HARD_RESET or
