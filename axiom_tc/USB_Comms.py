@@ -70,7 +70,7 @@ class USB_Comms:
         for VID in self.VENDOR_ID:
             usb_devices = hid.enumerate(VID)
             self.max_length = 0
-            self.__verbose = verbose
+            self._verbose = verbose
             if len(usb_devices) != 0:
                 # USB Bridge found
                 break
@@ -81,7 +81,7 @@ class USB_Comms:
             sys.exit(1)
 
         else:
-            if self.__verbose:
+            if self._verbose:
                 print("Found TNx USB Bridge devices...")
             for dev in usb_devices:
                 # Graceful error needed for USB device not available
@@ -91,7 +91,7 @@ class USB_Comms:
                     self.vid = dev['vendor_id']
                     self.pid = dev['product_id']
 
-                    if self.__verbose:
+                    if self._verbose:
                         print('    Grabbing device in path: ', path)
                         print('    Manufacturer String:     ', dev['manufacturer_string'])
                         print('    Product String:          ', dev['product_string'])
@@ -110,7 +110,7 @@ class USB_Comms:
                     self.hidPayloadSize = self.wMaxPacketSize + 1
                     self.max_wr_pay_length = (self.wMaxPacketSize == 64) and (64 - self.AX_HEADER_LEN - self.AX_USB_HEADER_LEN) or (255 - self.AX_HEADER_LEN)
                     self.max_rd_pay_length = (self.wMaxPacketSize == 64) and (64 - self.AX_RX_HEADER_LEN) or (255)
-                    if self.__verbose:
+                    if self._verbose:
                         print('Max Write Length: ' + str(self.max_wr_pay_length))
                         print('Max Read Length: ' + str(self.max_rd_pay_length))
             try:  #Fail gracefully if the USB object can't be acquired
@@ -120,7 +120,7 @@ class USB_Comms:
                 sys.exit(1)
 
     def stop_bridge(self):
-        if self.__verbose: print("    Stopping Proxy Mode...")
+        if self._verbose: print("    Stopping Proxy Mode...")
         buffer_wr = list(self.EMPTY_PKT)
         buffer_wr[1] = self.AX_TBP_CMD_NULL
 
@@ -128,24 +128,24 @@ class USB_Comms:
         # https://github.com/sergiomsilva/alpr-unconstrained/issues/73
         # For the reason of having to use the "bytes" function
         self.__device.write(bytes(buffer_wr[0:(self.hidPayloadSize)]))
-        if self.__verbose: print("    Bridge Stop requested...")
+        if self._verbose: print("    Bridge Stop requested...")
 
         # Check for buffer, if they don't match, just try a couple of times:
         retries = 0
         while retries < self.MAX_TBP_STOP_RETRY:
             buffer_rd = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
-            if self.__verbose: print(buffer_rd)
+            if self._verbose: print(buffer_rd)
 
             if buffer_rd[0] == self.AX_TBP_CMD_NULL:
                 while len(buffer_rd) != 0:
                     buffer_rd = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
-                if self.__verbose: print("    flushed...")
+                if self._verbose: print("    flushed...")
                 return
         print("ERROR: could not issue stop command to USB Bridge.")
         raise AssertionError
 
     def comms_init(self, axiom):
-        self.__axiom = axiom
+        self._axiom = axiom
         self.stop_bridge()
 
 
@@ -155,7 +155,7 @@ class USB_Comms:
         #    print("Requested length: %d, allowed is %d" % (length, self.max_rd_pay_length))
         #    raise ValueError
 
-        if self.__verbose: print("\nUSB Read request at add: 0x%x, length: %d" % (target_address,length))
+        if self._verbose: print("\nUSB Read request at add: 0x%x, length: %d" % (target_address,length))
 
         left_to_transfer = length
         to_address = target_address
@@ -169,7 +169,7 @@ class USB_Comms:
                 left_to_transfer = left_to_transfer - self.max_rd_pay_length
                 ta_msb = (to_address & 0xFF00) >> 8
                 ta_lsb = (to_address & 0x00FF)
-                if self.__verbose: print("Address 0x%x" % to_address)
+                if self._verbose: print("Address 0x%x" % to_address)
                 to_address = to_address + to_transfer
 
             else:
@@ -187,7 +187,7 @@ class USB_Comms:
             payload_header  = [ta_lsb, ta_msb, length_lsb, length_msb]
             message         = usb_header + payload_header
             wr_buffer       = message + ([0] * ((self.hidPayloadSize) - len(message)))
-            if self.__verbose:
+            if self._verbose:
                 print("Reading from device...")
                 print("rd usb_header: ", byte2ascii(usb_header))
                 print("rd payload_header: ", byte2ascii(payload_header))
@@ -197,7 +197,7 @@ class USB_Comms:
             rd_buffer = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
             assert rd_buffer[0] == self.AX_TBP_RDWR_OK
             assert rd_buffer[1] == to_transfer
-            if self.__verbose:
+            if self._verbose:
                 print("Device Response:")
                 print("rd Buffer is of length: " + str(len(rd_buffer)))
                 print("rd Left to transfer: " + str(left_to_transfer))
@@ -209,7 +209,7 @@ class USB_Comms:
             print("ERROR: Did not return enough bytes, requested %d, returned %d." %
                   (length, len(ret_buffer)))
             raise AssertionError
-        if self.__verbose: print("returning buffer ", byte2ascii(ret_buffer))
+        if self._verbose: print("returning buffer ", byte2ascii(ret_buffer))
         return list(ret_buffer)
 
 
@@ -219,7 +219,7 @@ class USB_Comms:
             print("Length: %d, and given payload is %d" % (length,len(payload)))
             raise AssertionError
 
-        if self.__verbose:
+        if self._verbose:
             print("\nUSB Write request at add: 0x%x, length: %d" % (target_address,length))
             print("payload: ", byte2ascii(payload))
 
@@ -255,7 +255,7 @@ class USB_Comms:
             payload_header  = [ta_lsb, ta_msb, length_lsb, length_msb]
             message         = usb_header + payload_header + payload[transferred:transferred+to_transfer]
             buffer = message + ([0] * (self.hidPayloadSize - len(message)))
-            if self.__verbose:
+            if self._verbose:
                 print("Writing %d bytes to device..." % to_transfer)
                 print("wr usb_header: ", byte2ascii(usb_header))
                 print("wr payload_header: ", byte2ascii(payload_header))
@@ -281,11 +281,11 @@ class USB_Comms:
 
 
     def set_proxy_mode(self):
-        if self.__verbose:
+        if self._verbose:
             print("Setting USB bridge into Proxy Mode")
-        target_address = self.__axiom.convert_usage_to_target_address(0x34, 0)
-        max_report_len = self.__axiom.get_max_report_len()
-        if self.__verbose:
+        target_address = self._axiom.u31.convert_usage_to_target_address(0x34, 0)
+        max_report_len = self._axiom.u31.max_report_len
+        if self._verbose:
             print("target address: ", target_address)
             print("max_report_len", max_report_len)
         usb_header     = [0x00, self.AX_TBP_REPEAT, 0x58, 0x04]
@@ -295,7 +295,7 @@ class USB_Comms:
         rd_buffer = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
         assert ((rd_buffer[0] == self.AX_TBP_REPEAT and rd_buffer[1] ==  self.AX_TBP_RDWR_OK) or # PB-005
             (rd_buffer[0] == self.AX_TBP_USBID_UNSOLICITED and rd_buffer[1] == 0x4))             # PB-007
-        if self.__verbose:
+        if self._verbose:
             print("Bridge is in Proxy Mode!")
 
 
@@ -311,9 +311,7 @@ class USB_Comms:
         buffer_wr = list(self.EMPTY_PKT)
         buffer_wr[1] = 0x0
         self.write_device(buffer_wr)
-        if self.__verbose: print("    Null Command Sent...")
-
-
+        if self._verbose: print("    Null Command Sent...")
 
     def close(self, doreset=False):
         if self.pid == self.PRODUCT_ID[0]:
