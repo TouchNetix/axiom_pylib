@@ -1,6 +1,6 @@
 # aXiom python library
 
-This library provides users the building blocks to communicate with the aXiom touch controllers. By linking these building blocks together, more complex functions can be acheived, such as loading firmware, loading configuration files or building a production test process.
+This library provides users the building blocks to communicate with the aXiom touch controllers. By linking these building blocks together, more complex functions can be achieved, such as loading firmware, loading configuration files or building a production test process.
 
 ## File Overview
 
@@ -18,7 +18,7 @@ This library provides users the building blocks to communicate with the aXiom to
 
 `u06_SelfTest.py` - Provides access to configure and control the self test settings in aXiom.
 
-`u07_LiveView.py` - Provides access to read live data from aXiom. For instance GPIO status, acqusition status and self test status.
+`u07_LiveView.py` - Provides access to read live data from aXiom. For instance GPIO status, acquisition status and self test status.
 
 `u32_DeviceCapabilities.py` - Reports the capabilities of the aXiom device. For instance, the number CTS nodes, which comms interfaces are supported etc.
 
