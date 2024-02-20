@@ -30,16 +30,17 @@ This library provides users the building blocks to communicate with the aXiom to
 
 ## Prerequisites
 
-### I2C Interface
+Requires Python 3.8 to be installed and accessible on the Path variable.
 
-Requires `smbus2` to be installed and accessible to your Python interpreter.
+### axiom_tc Package
+
+This is the aXiom touch controller python package that provides access to core functionality and communication to the aXiom device. In conjunction with the `axiom_tc` package, the appropriate interface packages are expected to be available. These are described after this section.
+
+Requires `axiom_tc` to be installed and accessible to your Python interpreter.
 
 ```console
-pip install smbus2
+pip install axiom_tc
 ```
-
-See [smbus2](https://pypi.org/project/smbus2/) for more information.
-
 
 ### SPI Interface
 
@@ -51,17 +52,66 @@ pip install spidev
 
 See [spidev](https://pypi.org/project/spidev/) for more information.
 
+### I2C Interface
+
+Requires `smbus2` to be installed and accessible to your Python interpreter.
+
+```console
+pip install smbus2
+```
+
+See [smbus2](https://pypi.org/project/smbus2/) for more information.
+
 ### USB Interface
 
 Requires `hid` to be installed and accessible to your Python interpreter.
 
 ```console
-pip install hid
+pip install hid==1.0.4
 ```
 
 See [hid](https://pypi.org/project/hid/) for more information.
 
-#### Using hid module on Windows
+#### Linux
+
+Using the `hid` package will access the TouchNetix protocol bridges via the `/dev/hidrawX` interface. This typically requires root access. This means the scripts will need to be run as `sudo`. Alternatively, `udev` can be used to give all users permissions to the `hidraw` devices.
+
+Create the following `udev` rules file `/etc/udev/rules.d/99-axiom-hidraw-permissions.rules`:
+
+```text
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="6f02", MODE="0666"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="2f04", MODE="0666"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="2f08", MODE="0666"
+
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="6f02", MODE="0666"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="2f04", MODE="0666"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="2f08", MODE="0666"
+
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="28e9", ATTRS{idProduct}=="6f02", MODE="0666"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="28e9", ATTRS{idProduct}=="2f04", MODE="0666"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="28e9", ATTRS{idProduct}=="2f08", MODE="0666"
+```
+
+The changes will apply on the next bootup. To apply the changes immediately:
+
+```console
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+If this error message is observed:
+
+```console
+ImportError: Unable to load any of the following libraries:libhidapi-hidraw.so libhidapi-hidraw.so.0 libhidapi-libusb.so libhidapi-libusb.so.0 libhidapi-iohidmanager.so libhidapi-iohidmanager.so.0 libhidapi.dylib hidapi.dll libhidapi-0.dll
+```
+
+Run the following to install the `hidapi` library.
+
+```console
+sudo apt-get install libhidapi-hidraw0 libhidapi-libusb0
+```
+
+#### Windows
 
 Windows requires the `hidapi.dll` files to reside in the same directory as python (see more info [here](https://github.com/abcminiuser/python-elgato-streamdeck/issues/56))
 The `.dll` files can be found [here](https://github.com/libusb/hidapi/releases)
