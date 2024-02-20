@@ -1,3 +1,8 @@
+# Copyright (c) 2024 TouchNetix
+# 
+# This file is part of [Project Name] and is released under the MIT License: 
+# See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
+
 from .axiom import *
 from .CDU_Common import *
 from .u02_SystemManager import *
