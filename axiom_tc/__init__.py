@@ -13,4 +13,32 @@ from .u32_DeviceCapabilities import *
 from .u33_CRCData import *
 from .u48_GPIOControls import *
 
-__all__ = ["axiom", "CDU_Common", "u02_SystemManager", "u06_SelfTest", "u07_LiveView", "u31_DeviceInformation", "u32_DeviceCapabilities", "u33_CRCData", "u48_GPIOControls"]
+__all__ = [
+    "axiom",
+    "CDU_Common",
+    "u02_SystemManager",
+    "u06_SelfTest",
+    "u07_LiveView",
+    "u31_DeviceInformation",
+    "u32_DeviceCapabilities",
+    "u33_CRCData",
+    "u48_GPIOControls"
+]
+
+try:
+    from .USB_Comms import *
+    __all__.append("USB_Comms")
+except ImportError:
+    pass
+
+try:
+    from .I2C_Comms import *
+    __all__.append("I2C_Comms")
+except ImportError:
+    pass
+
+try:
+    from .SPI_Comms import *
+    __all__.append("SPI_Comms")
+except ImportError:
+    pass
