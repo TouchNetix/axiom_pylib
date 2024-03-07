@@ -9,35 +9,36 @@ from .CDU_Common import CDU_Common
 from .u02_SystemManager import u02_SystemManager
 from .u31_DeviceInformation import u31_DeviceInformation
 
+
 class axiom:
-    TIMEOUT_MS                  = 5000 # timeout before giving up in comms
+    TIMEOUT_MS = 5000  # timeout before giving up in comms
 
     # TODO: clean the following comment when updating docs.
     # NOTE: Current documentation out of date, target addr. is not 0x0104
-    BLP_FIFO_ADDRESS            = 0x0102
-    BLP_REG_COMMAND             = 0x0100
-    BLP_REG_STATUS              = 0x0100
+    BLP_FIFO_ADDRESS = 0x0102
+    BLP_REG_COMMAND = 0x0100
+    BLP_REG_STATUS = 0x0100
 
     # Usages to skip over, these are read only usages. If the config file
     # includes any of these usages, it is for informational purposes only
-    ignore_usage_list = [0x31, # Device Information
-                         0x32, # Device Capabilities
-                         0x33, # CRC Data
-                         0x36, # Factory calibration data
-                         0x82] # AE Controls
+    ignore_usage_list = [0x31,  # Device Information
+                         0x32,  # Device Capabilities
+                         0x33,  # CRC Data
+                         0x36,  # Factory calibration data
+                         0x82]  # AE Controls
 
     # Command driven usages. They can contain an large amount of data which is
     # in efficient for aXiom to store in RAM. These usages need to be handled
     # slightly differently from normal usages.
-    cdu_usage_list    = [0x05, # Comments
-                         0x22, # Sequence Data
-                         0x43, # Haptic Hotspots
-                         0x77, # Dial on Display
-                         0x93, # AE Profile
-                         0x94] # Delta scale map
+    cdu_usage_list = [0x05,  # Comments
+                      0x22,  # Sequence Data
+                      0x43,  # Haptic Hotspots
+                      0x77,  # Dial on Display
+                      0x93,  # AE Profile
+                      0x94]  # Delta scale map
 
     def __init__(self, comms, read_usage_table=True):
-        self._comms   = comms
+        self._comms = comms
 
         # Pass the axiom object into comms for access to axiom data and methods
         comms.comms_init(self)
@@ -60,7 +61,6 @@ class axiom:
 
         return usage_content
 
-
     def write_usage(self, usage, buffer):
         buffer_offset = 0
 
@@ -78,25 +78,24 @@ class axiom:
             self.u02.check_usage_write_progress(usage)
 
             buffer_offset += self.u31.PAGE_SIZE
-    
+
     def get_usage_revision(self, usage):
-        revision = 0
-        if self.u31._usage_table_populated == False:
+        if self.u31._usage_table_populated is False:
             revision = 0
         else:
             revision = self.u31._usage_table[usage].usage_rev
         return revision
 
     def get_usage_length(self, usage):
-        if self.u31._usage_table_populated == True:
+        if self.u31._usage_table_populated is True:
             return self.u31._usage_table[usage].length
         else:
             return 0
 
     def config_write_usage_to_device(self, usage, buffer):
-        if usage in self.ignore_usage_list: # These are informational usages or read only
+        if usage in self.ignore_usage_list:  # These are informational usages or read only
             pass
-        elif usage in self.cdu_usage_list: # Command driven usages need to be handled seperately
+        elif usage in self.cdu_usage_list:  # Command driven usages need to be handled seperately
             cdu = CDU_Common(self)
             cdu.write(usage, buffer)
             cdu_content = cdu.read(usage)
@@ -108,16 +107,15 @@ class axiom:
             usage_buffer = self.read_usage(usage)
 
             if buffer != usage_buffer:
-                print("ERROR: Failed to write config to usage 0x%x" % (usage))
-                print("Expected Length: %d and Actual Length: %d" % (len(buffer),len(usage_buffer)))
+                print("ERROR: Failed to write config to usage 0x%x" % usage)
+                print("Expected Length: %d and Actual Length: %d" % (len(buffer), len(usage_buffer)))
                 print("Expecting: " + str(buffer))
                 print("Read from Device: " + str(usage_buffer))
 
-
     def enter_bootloader_mode(self):
-        attempts      = 5
-        u31_ta        = self.u31.convert_usage_to_target_address(0x31, 0)
-        u31_page0     = self._comms.read_page(u31_ta, 12)
+        attempts = 5
+        u31_ta = self.u31.convert_usage_to_target_address(0x31, 0)
+        u31_page0 = self._comms.read_page(u31_ta, 12)
         in_bootloader = u31_page0[1] & 0x80
 
         # If the chip is already in bootloader mode, no need to continue
@@ -129,7 +127,7 @@ class axiom:
         # safe to build the usage table. The usage table is required to send the
         # appropiate system manager commands to aXiom to get it into bootloader
         # mode
-        if self.u31._usage_table_populated == False:
+        if self.u31._usage_table_populated is False:
             self.u31.build_usage_table()
 
         # Attempt to enter bootloader mode
@@ -142,7 +140,7 @@ class axiom:
             self.u02.send_command(self.u02.CMD_ENTER_BOOTLOADER)
 
             # Read for the bootloader flag
-            u31_page0     = self._comms.read_page(u31_ta, 12)
+            u31_page0 = self._comms.read_page(u31_ta, 12)
             in_bootloader = u31_page0[1] & 0x80
 
             if in_bootloader != 0:
@@ -165,7 +163,7 @@ class axiom:
         busy_time = 0
         # Ensure aXiom is available to process our request
         current_timeout = 0
-        while self.bootloader_get_busy_status() == True:
+        while self.bootloader_get_busy_status():
             # aXiom is busy, wait 1ms before trying again
             if current_timeout < self.TIMEOUT_MS:
                 current_timeout = current_timeout + 1
@@ -180,7 +178,7 @@ class axiom:
 
         # Ensure aXiom is available to process our request
         current_timeout = 0
-        while self.bootloader_get_busy_status() == True:
+        while self.bootloader_get_busy_status():
             # aXiom is busy, wait 1ms before trying again
             if current_timeout < self.TIMEOUT_MS:
                 current_timeout = current_timeout + 1
@@ -199,18 +197,16 @@ class axiom:
         # constants declared. If this is not the case then we assume chunk
         # size compatible with i2c/SPI.
         try:
-            if (self._comms.wMaxPacketSize > self.u31.PAGE_SIZE):
-                chunk_size = (self.u31.PAGE_SIZE-1) - self._comms.AX_HEADER_LEN
+            if self._comms.wMaxPacketSize > self.u31.PAGE_SIZE:
+                chunk_size = (self.u31.PAGE_SIZE - 1) - self._comms.AX_HEADER_LEN
             else:
-                chunk_size = (self._comms.wMaxPacketSize-1) \
-                        - self._comms.AX_TBP_I2C_DEV_HEAD_LEN \
-                        - self._comms.AX_HEADER_LEN
+                chunk_size = (self._comms.wMaxPacketSize - 1) \
+                             - self._comms.AX_TBP_I2C_DEV_HEAD_LEN \
+                             - self._comms.AX_HEADER_LEN
         except:
-            chunk_size = self.u31.PAGE_SIZE-1
+            chunk_size = self.u31.PAGE_SIZE - 1
 
         while offset < length:
-            length_to_write = 0
-
             # Calculate how much data to transfer, up to the max transfer size
             if (offset + chunk_size) < length:
                 length_to_write = chunk_size
@@ -225,7 +221,7 @@ class axiom:
 
             # Ensure aXiom is available to process our request
             current_timeout = 0
-            while self.bootloader_get_busy_status() == True:
+            while self.bootloader_get_busy_status():
                 # aXiom is busy, wait 1ms before trying again
                 if current_timeout < self.TIMEOUT_MS:
                     current_timeout = current_timeout + 1

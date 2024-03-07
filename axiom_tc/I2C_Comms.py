@@ -5,13 +5,15 @@
 
 from smbus2 import SMBus, i2c_msg
 
+
 class I2C_Comms:
     def __init__(self, bus, address):
-        self.__addr = address
-        self.__bus = SMBus(bus)
+        self._addr = address
+        self._bus = SMBus(bus)
+        self._axiom = None
 
     def comms_init(self, axiom):
-        self.__axiom = axiom
+        self._axiom = axiom
 
     def read_page(self, target_address, length):
         ta_msb = (target_address & 0xFF00) >> 8
@@ -20,18 +22,17 @@ class I2C_Comms:
         length_msb = (length & 0x7F00) >> 8
         length_lsb = (length & 0x00FF)
 
-        length_msb |= 0x80 # Set the READ bit
+        length_msb |= 0x80  # Set the READ bit
 
-        wr = i2c_msg.write(self.__addr, [ta_lsb, ta_msb, length_lsb, length_msb])
-        rd = i2c_msg.read(self.__addr, length)
+        wr = i2c_msg.write(self._addr, [ta_lsb, ta_msb, length_lsb, length_msb])
+        rd = i2c_msg.read(self._addr, length)
 
         try:
-            self.__bus.i2c_rdwr(wr, rd)
+            self._bus.i2c_rdwr(wr, rd)
         except IOError:
             pass # Silently handle IOError. Typically see this when in bootloader mode
 
         return list(rd)
-
 
     def write_page(self, target_address, length, payload):
         ta_msb = (target_address & 0xFF00) >> 8
@@ -40,18 +41,17 @@ class I2C_Comms:
         length_msb = (length & 0x7F00) >> 8
         length_lsb = (length & 0x00FF)
 
-        length_msb &= ~0x80 # Ensure the read bit is clear
+        length_msb &= ~0x80  # Ensure the read bit is clear
 
         write_header = [ta_lsb, ta_msb, length_lsb, length_msb]
         write_payload = payload
         write = write_header + write_payload
 
         wr = i2c_msg.write(self.__addr, write)
-
         try:
             self.__bus.i2c_rdwr(wr)
         except IOError:
             pass # Silently handle IOError. Typically see this when in bootloader mode
 
     def close(self):
-        self.__bus.close()
+        self._bus.close()
