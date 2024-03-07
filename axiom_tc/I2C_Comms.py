@@ -30,7 +30,7 @@ class I2C_Comms:
         try:
             self._bus.i2c_rdwr(wr, rd)
         except IOError:
-            pass  # Silently handle IOError. You see this when attempting to enter bootloader mode
+            pass # Silently handle IOError. Typically see this when in bootloader mode
 
         return list(rd)
 
@@ -47,8 +47,11 @@ class I2C_Comms:
         write_payload = payload
         write = write_header + write_payload
 
-        wr = i2c_msg.write(self._addr, write)
-        self._bus.i2c_rdwr(wr)
+        wr = i2c_msg.write(self.__addr, write)
+        try:
+            self.__bus.i2c_rdwr(wr)
+        except IOError:
+            pass # Silently handle IOError. Typically see this when in bootloader mode
 
     def close(self):
         self._bus.close()
