@@ -154,41 +154,28 @@ class axiom:
         # Busy bit is bit 0 of byte 2
         return (status[2] & 0x01) != 0
 
+    def bootloader_wait_until_not_busy(self):
+        current_timeout = 0
+        while self.bootloader_get_busy_status():
+            # aXiom is busy, wait 1ms before trying again
+            if current_timeout < self.TIMEOUT_MS:
+                current_timeout = current_timeout + 1
+            else:
+                print("ERROR: aXiom does not seem to be responding...")
+                raise TimeoutError
+
+            # If busy, allow the bootloader to run a bit longer before asking again
+            sleep(0.001)
+
     def bootloader_reset_axiom(self):
         self._comms.write_page(self.BLP_REG_COMMAND, 2, [0x02, 0x00])
 
-    def bootloader_write_chunk(self, header, payload):
-        busy_time = 0
+    def bootloader_write_chunk(self, chunk):
         # Ensure aXiom is available to process our request
-        current_timeout = 0
-        while self.bootloader_get_busy_status():
-            # aXiom is busy, wait 1ms before trying again
-            if current_timeout < self.TIMEOUT_MS:
-                current_timeout = current_timeout + 1
-            else:
-                print("ERROR: aXiom does not seem to be responding...")
-                raise TimeoutError
+        self.bootloader_wait_until_not_busy()
 
-            sleep(0.001)
-
-        # Write the header data from the file
-        self._comms.write_page(self.BLP_FIFO_ADDRESS, len(header), header)
-
-        # Ensure aXiom is available to process our request
-        current_timeout = 0
-        while self.bootloader_get_busy_status():
-            # aXiom is busy, wait 1ms before trying again
-            if current_timeout < self.TIMEOUT_MS:
-                current_timeout = current_timeout + 1
-            else:
-                print("ERROR: aXiom does not seem to be responding...")
-                raise TimeoutError
-            busy_time += 1
-            sleep(0.001)
-
-        # Break the chunk into smaller, more manageable payloads
         offset = 0
-        length = len(payload)
+        length = len(chunk)
 
         # The following slicing depends on the type of communication link.
         # here we probe the comms class to see if we have any USB specific
@@ -201,7 +188,7 @@ class axiom:
                 chunk_size = (self._comms.wMaxPacketSize - 1) \
                              - self._comms.AX_TBP_I2C_DEV_HEAD_LEN \
                              - self._comms.AX_HEADER_LEN
-        except:
+        except AttributeError:
             chunk_size = self.u31.PAGE_SIZE - 1
 
         while offset < length:
@@ -212,22 +199,13 @@ class axiom:
                 length_to_write = length - offset
 
             # Extract the data to be transferred
-            payload_chunk = payload[offset:(offset + length_to_write)]
+            payload_chunk = chunk[offset:(offset + length_to_write)]
 
             # Send the data to aXiom
             self._comms.write_page(self.BLP_FIFO_ADDRESS, length_to_write, payload_chunk)
 
             # Ensure aXiom is available to process our request
-            current_timeout = 0
-            while self.bootloader_get_busy_status():
-                # aXiom is busy, wait 1ms before trying again
-                if current_timeout < self.TIMEOUT_MS:
-                    current_timeout = current_timeout + 1
-                else:
-                    print("ERROR: aXiom does not seem to be responding...")
-                    raise TimeoutError
-                busy_time += 1
-                sleep(0.001)
+            self.bootloader_wait_until_not_busy()
             offset += length_to_write
 
     def close(self):
