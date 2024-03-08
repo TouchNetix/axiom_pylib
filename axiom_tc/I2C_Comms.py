@@ -1,6 +1,6 @@
 # Copyright (c) 2024 TouchNetix
 # 
-# This file is part of [Project Name] and is released under the MIT License: 
+# This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
 from smbus2 import SMBus, i2c_msg
@@ -30,7 +30,7 @@ class I2C_Comms:
         try:
             self._bus.i2c_rdwr(wr, rd)
         except IOError:
-            pass # Silently handle IOError. Typically see this when in bootloader mode
+            pass  # Silently handle IOError. Typically, see this when in bootloader mode
 
         return list(rd)
 
@@ -47,11 +47,11 @@ class I2C_Comms:
         write_payload = payload
         write = write_header + write_payload
 
-        wr = i2c_msg.write(self.__addr, write)
+        wr = i2c_msg.write(self._addr, write)
         try:
-            self.__bus.i2c_rdwr(wr)
+            self._bus.i2c_rdwr(wr)
         except IOError:
-            pass # Silently handle IOError. Typically see this when in bootloader mode
+            pass  # Silently handle IOError. Typically, see this when in bootloader mode
 
     def close(self):
         self._bus.close()

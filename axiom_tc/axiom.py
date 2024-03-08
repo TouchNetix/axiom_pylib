@@ -1,6 +1,6 @@
 # Copyright (c) 2024 TouchNetix
 # 
-# This file is part of [Project Name] and is released under the MIT License: 
+# This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
 from time import sleep
@@ -13,8 +13,6 @@ from .u31_DeviceInformation import u31_DeviceInformation
 class axiom:
     TIMEOUT_MS = 5000  # timeout before giving up in comms
 
-    # TODO: clean the following comment when updating docs.
-    # NOTE: Current documentation out of date, target addr. is not 0x0104
     BLP_FIFO_ADDRESS = 0x0102
     BLP_REG_COMMAND = 0x0100
     BLP_REG_STATUS = 0x0100
@@ -27,7 +25,7 @@ class axiom:
                          0x36,  # Factory calibration data
                          0x82]  # AE Controls
 
-    # Command driven usages. They can contain an large amount of data which is
+    # Command driven usages. They can contain a large amount of data which is
     # in efficient for aXiom to store in RAM. These usages need to be handled
     # slightly differently from normal usages.
     cdu_usage_list = [0x05,  # Comments
@@ -50,11 +48,11 @@ class axiom:
     def read_usage(self, usage):
         usage_content = []
 
-        for pg in range(0, self.u31._usage_table[usage].num_pages):
+        for pg in range(0, self.u31.usage_table[usage].num_pages):
             read_length = self.u31.PAGE_SIZE
             # Calculate the remaining data to read for the last page
-            if pg == (self.u31._usage_table[usage].num_pages - 1):
-                read_length = self.u31._usage_table[usage].length - (self.u31.PAGE_SIZE * pg)
+            if pg == (self.u31.usage_table[usage].num_pages - 1):
+                read_length = self.u31.usage_table[usage].length - (self.u31.PAGE_SIZE * pg)
 
             target_address = self.u31.convert_usage_to_target_address(usage, pg)
             usage_content += self._comms.read_page(target_address, read_length)
@@ -64,11 +62,11 @@ class axiom:
     def write_usage(self, usage, buffer):
         buffer_offset = 0
 
-        for pg in range(0, self.u31._usage_table[usage].num_pages):
+        for pg in range(0, self.u31.usage_table[usage].num_pages):
             write_length = self.u31.PAGE_SIZE
 
             # Calculate the remaining data to read for the last page
-            if pg == (self.u31._usage_table[usage].num_pages - 1):
+            if pg == (self.u31.usage_table[usage].num_pages - 1):
                 write_length = self.get_usage_length(usage) - (self.u31.PAGE_SIZE * pg)
 
             buffer_offset_end = buffer_offset + write_length
@@ -80,22 +78,22 @@ class axiom:
             buffer_offset += self.u31.PAGE_SIZE
 
     def get_usage_revision(self, usage):
-        if self.u31._usage_table_populated is False:
+        if not self.u31.usage_table_populated:
             revision = 0
         else:
-            revision = self.u31._usage_table[usage].usage_rev
+            revision = self.u31.usage_table[usage].usage_rev
         return revision
 
     def get_usage_length(self, usage):
-        if self.u31._usage_table_populated is True:
-            return self.u31._usage_table[usage].length
+        if self.u31.usage_table_populated:
+            return self.u31.usage_table[usage].length
         else:
             return 0
 
     def config_write_usage_to_device(self, usage, buffer):
         if usage in self.ignore_usage_list:  # These are informational usages or read only
             pass
-        elif usage in self.cdu_usage_list:  # Command driven usages need to be handled seperately
+        elif usage in self.cdu_usage_list:  # Command driven usages need to be handled separately
             cdu = CDU_Common(self)
             cdu.write(usage, buffer)
             cdu_content = cdu.read(usage)
@@ -125,16 +123,16 @@ class axiom:
         # Depending on the sequence, the usage table may not be populated at
         # this moment. The device is not in bootloader mode, so it should be
         # safe to build the usage table. The usage table is required to send the
-        # appropiate system manager commands to aXiom to get it into bootloader
+        # appropriate system manager commands to aXiom to get it into bootloader
         # mode
-        if self.u31._usage_table_populated is False:
+        if not self.u31.usage_table_populated:
             self.u31.build_usage_table()
 
         # Attempt to enter bootloader mode
         while (in_bootloader == 0) and (attempts > 0):
             # Entering bootloader mode is "involved" to ensure it is a deliberate
             # request. Three "enter bootloader" commands are required, the number
-            # on the end is the sequence number, that will send the appropiate
+            # on the end is the sequence number, that will send the appropriate
             # "magic" number to aXiom. If all is well, aXiom will be in the
             # bootloader a few moments after the last command.
             self.u02.send_command(self.u02.CMD_ENTER_BOOTLOADER)
@@ -188,14 +186,14 @@ class axiom:
             busy_time += 1
             sleep(0.001)
 
-        # Break the chunk into smaller, more managable payloads
+        # Break the chunk into smaller, more manageable payloads
         offset = 0
         length = len(payload)
 
         # The following slicing depends on the type of communication link.
         # here we probe the comms class to see if we have any USB specific
         # constants declared. If this is not the case then we assume chunk
-        # size compatible with i2c/SPI.
+        # size compatible with I2C/SPI.
         try:
             if self._comms.wMaxPacketSize > self.u31.PAGE_SIZE:
                 chunk_size = (self.u31.PAGE_SIZE - 1) - self._comms.AX_HEADER_LEN

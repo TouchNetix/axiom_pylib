@@ -11,7 +11,6 @@ readme = "README.md"
 authors = [
     { name="Mark Satterthwaite", email="mark.satterthwaite@touchnetix.com"},
     { name="James Cameron", email="james.cameron@touchnetix.com"},
-    { name="Hannah Rossiter", email="hannah.rossiter@touchnetix.com"},
 ]
 
 classifiers = [

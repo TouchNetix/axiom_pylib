@@ -1,6 +1,6 @@
 # Copyright (c) 2024 TouchNetix
 # 
-# This file is part of [Project Name] and is released under the MIT License: 
+# This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
 import struct
@@ -23,6 +23,12 @@ class _Usage_Table_Entry:
         text = "Usage: u{0:02x}    Rev: {1:3d}    Page: 0x{2:02x}00    Num Pages: {3:3d}    Length: {4:5d}    {5:s}"
         return text.format(self.id, self.usage_rev, self.start_page, self.num_pages, self.length,
                            "Report" if self.is_report else "")
+
+
+def convert_device_id_to_string(device_id):
+    device_channel_count = device_id & 0x3FF
+    device_variant = (device_id & 0x7C00) >> 10
+    return "AX%u%c" % (device_channel_count, chr(ord('A') + device_variant))
 
 
 class u31_DeviceInformation:
@@ -87,7 +93,7 @@ class u31_DeviceInformation:
                                                   self.reg_fw_minor, self.reg_fw_patch, self.reg_fw_status)
 
     def convert_device_info_to_string(self, device_id, fw_variant, fw_ver_major, fw_ver_minor, fw_ver_patch, fw_status):
-        return "%s %s" % (self.convert_device_id_to_string(device_id),
+        return "%s %s" % (convert_device_id_to_string(device_id),
                           self.convert_firmware_version_to_string(fw_ver_major, fw_ver_minor, fw_ver_patch, fw_status,
                                                                   fw_variant))
 
@@ -96,11 +102,6 @@ class u31_DeviceInformation:
             return "%d.%d.%d-%s %s" % (major, minor, patch, self.FW_STATUS[status], self.FW_VARIANTS[fw_variant])
         else:
             return "%d.%02d-%s (RC%d) %s" % (major, minor, self.FW_STATUS[status], patch, self.FW_VARIANTS[fw_variant])
-
-    def convert_device_id_to_string(self, device_id):
-        device_channel_count = device_id & 0x3FF
-        device_variant = (device_id & 0x7C00) >> 10
-        return "AX%u%c" % (device_channel_count, chr(ord('A') + device_variant))
 
     def _unpack(self):
         self._unpack_registers()
@@ -219,10 +220,18 @@ class u31_DeviceInformation:
         silicon_rev = chr(0x41 + self.reg_silicon_rev)
 
         print("u31 Device Information")
-        print("  Device ID   : %s" % (self.convert_device_id_to_string(self.reg_device_id)))
+        print("  Device ID   : %s" % (convert_device_id_to_string(self.reg_device_id)))
         print("  FW Revision : %s" % (
             self.convert_firmware_version_to_string(self.reg_fw_major, self.reg_fw_minor, self.reg_fw_patch,
                                                     self.reg_fw_status, self.reg_fw_variant)))
         print("  BL Revision : %d.%02d" % (self.reg_bl_major, self.reg_bl_minor))
         print("  Silicon     : 0x%04X (Rev %c)" % (self.reg_jedec_id, silicon_rev))
+
+    @property
+    def usage_table(self):
+        return self._usage_table
+
+    @property
+    def usage_table_populated(self):
+        return self._usage_table_populated
 # endregion
