@@ -98,10 +98,14 @@ class u31_DeviceInformation:
                                                                   fw_variant))
 
     def convert_firmware_version_to_string(self, major, minor, patch, status, fw_variant):
-        if major >= 4 and minor >= 8:
-            return "%d.%d.%d-%s %s" % (major, minor, patch, self.FW_STATUS[status], self.FW_VARIANTS[fw_variant])
+        if self.reg_mode == 0:
+            if major >= 4 and minor >= 8:
+                return "%d.%d.%d-%s %s" % (major, minor, patch, self.FW_STATUS[status], self.FW_VARIANTS[fw_variant])
+            else:
+                return "%d.%02d-%s (RC%d) %s" % (
+                    major, minor, self.FW_STATUS[status], patch, self.FW_VARIANTS[fw_variant])
         else:
-            return "%d.%02d-%s (RC%d) %s" % (major, minor, self.FW_STATUS[status], patch, self.FW_VARIANTS[fw_variant])
+            return "Bootloader %d.%02d" % (major, minor)
 
     def _unpack(self):
         self._unpack_registers()
@@ -116,7 +120,6 @@ class u31_DeviceInformation:
 
         # Verify the device is not in bootloader mode
         if self.reg_mode != 0:
-            print("Cannot build usage table, aXiom is in bootloader mode")
             return False
 
         target_address = self.convert_usage_to_target_address(0x31, 1)
@@ -160,7 +163,7 @@ class u31_DeviceInformation:
             print("Usage table not yet initialised")
 
     def convert_usage_to_target_address(self, usage, page=0):
-        if self._usage_table_populated is False and usage == 0x31:
+        if self._usage_table_populated is False or usage == 0x31:
             target_address = 0x0000 + (page << 8)
         else:
             target_address = (self._usage_table[usage].start_page << 8) + (page << 8)

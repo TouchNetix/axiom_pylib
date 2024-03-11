@@ -15,6 +15,7 @@ from .u48_GPIOControls import *
 
 __all__ = [
     "axiom",
+    "Bootloader",
     "CDU_Common",
     "u02_SystemManager",
     "u06_SelfTest",
@@ -22,8 +23,19 @@ __all__ = [
     "u31_DeviceInformation",
     "u32_DeviceCapabilities",
     "u33_CRCData",
-    "u48_GPIOControls"
+    "u48_GPIOControls",
 ]
+
+from .axiom import axiom
+from .Bootloader import Bootloader
+from .CDU_Common import CDU_Common
+from .u02_SystemManager import u02_SystemManager
+from .u06_SelfTest import u06_SelfTest
+from .u07_LiveView import u07_LiveView
+from .u31_DeviceInformation import u31_DeviceInformation
+from .u32_DeviceCapabilities import u32_DeviceCapabilities
+from .u33_CRCData import u33_CRCData
+from .u48_GPIOControls import u48_GPIOControls
 
 try:
     from .USB_Comms import *

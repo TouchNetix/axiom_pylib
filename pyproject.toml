@@ -23,4 +23,3 @@ requires-python = ">=3.8"
 [project.urls]
 Homepage = "https://www.touchnetix.com/"
 Repository = "https://github.com/TouchNetix/axiom_pylib"
-#Documentation = "https://github.com/TouchNetix/axiom_pylib/wiki"

@@ -3,19 +3,14 @@
 # This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
-from time import sleep
-
 from .CDU_Common import CDU_Common
 from .u02_SystemManager import u02_SystemManager
 from .u31_DeviceInformation import u31_DeviceInformation
+from .Bootloader import Bootloader
 
 
 class axiom:
     TIMEOUT_MS = 5000  # timeout before giving up in comms
-
-    BLP_FIFO_ADDRESS = 0x0102
-    BLP_REG_COMMAND = 0x0100
-    BLP_REG_STATUS = 0x0100
 
     # Usages to skip over, these are read only usages. If the config file
     # includes any of these usages, it is for informational purposes only
@@ -41,9 +36,14 @@ class axiom:
         # Pass the axiom object into comms for access to axiom data and methods
         comms.comms_init(self)
 
-        # Objects to usages that are key to most axiom operations
+        # Objects to usages that are key to most axiom operations, however, most cannot be
+        # used if the device is in bootloader mode.
         self.u31 = u31_DeviceInformation(self, read_usage_table)
-        self.u02 = u02_SystemManager(self)
+
+        if self.is_in_bootloader_mode():
+            self.u02 = None
+        else:
+            self.u02 = u02_SystemManager(self)
 
     def read_usage(self, usage):
         usage_content = []
@@ -90,6 +90,11 @@ class axiom:
         else:
             return 0
 
+    def is_in_bootloader_mode(self):
+        u31_ta = 0x0000
+        u31_page0 = self._comms.read_page(u31_ta, 12)
+        return True if (u31_page0[1] & 0x80) else False
+
     def config_write_usage_to_device(self, usage, buffer):
         if usage in self.ignore_usage_list:  # These are informational usages or read only
             pass
@@ -109,104 +114,6 @@ class axiom:
                 print("Expected Length: %d and Actual Length: %d" % (len(buffer), len(usage_buffer)))
                 print("Expecting: " + str(buffer))
                 print("Read from Device: " + str(usage_buffer))
-
-    def enter_bootloader_mode(self):
-        attempts = 5
-        u31_ta = self.u31.convert_usage_to_target_address(0x31, 0)
-        u31_page0 = self._comms.read_page(u31_ta, 12)
-        in_bootloader = u31_page0[1] & 0x80
-
-        # If the chip is already in bootloader mode, no need to continue
-        if in_bootloader != 0:
-            return True
-
-        # Depending on the sequence, the usage table may not be populated at
-        # this moment. The device is not in bootloader mode, so it should be
-        # safe to build the usage table. The usage table is required to send the
-        # appropriate system manager commands to aXiom to get it into bootloader
-        # mode
-        if not self.u31.usage_table_populated:
-            self.u31.build_usage_table()
-
-        # Attempt to enter bootloader mode
-        while (in_bootloader == 0) and (attempts > 0):
-            # Entering bootloader mode is "involved" to ensure it is a deliberate
-            # request. Three "enter bootloader" commands are required, the number
-            # on the end is the sequence number, that will send the appropriate
-            # "magic" number to aXiom. If all is well, aXiom will be in the
-            # bootloader a few moments after the last command.
-            self.u02.send_command(self.u02.CMD_ENTER_BOOTLOADER)
-
-            # Read for the bootloader flag
-            u31_page0 = self._comms.read_page(u31_ta, 12)
-            in_bootloader = u31_page0[1] & 0x80
-
-            if in_bootloader != 0:
-                # Bootloader flag is set, no need to continue.
-                break
-
-            attempts -= 1
-
-        return True if (in_bootloader != 0) else False
-
-    def bootloader_get_busy_status(self):
-        status = self._comms.read_page(self.BLP_REG_STATUS, 4)
-        # Busy bit is bit 0 of byte 2
-        return (status[2] & 0x01) != 0
-
-    def bootloader_wait_until_not_busy(self):
-        current_timeout = 0
-        while self.bootloader_get_busy_status():
-            # aXiom is busy, wait 1ms before trying again
-            if current_timeout < self.TIMEOUT_MS:
-                current_timeout = current_timeout + 1
-            else:
-                print("ERROR: aXiom does not seem to be responding...")
-                raise TimeoutError
-
-            # If busy, allow the bootloader to run a bit longer before asking again
-            sleep(0.001)
-
-    def bootloader_reset_axiom(self):
-        self._comms.write_page(self.BLP_REG_COMMAND, 2, [0x02, 0x00])
-
-    def bootloader_write_chunk(self, chunk):
-        # Ensure aXiom is available to process our request
-        self.bootloader_wait_until_not_busy()
-
-        offset = 0
-        length = len(chunk)
-
-        # The following slicing depends on the type of communication link.
-        # here we probe the comms class to see if we have any USB specific
-        # constants declared. If this is not the case then we assume chunk
-        # size compatible with I2C/SPI.
-        try:
-            if self._comms.wMaxPacketSize > self.u31.PAGE_SIZE:
-                chunk_size = (self.u31.PAGE_SIZE - 1) - self._comms.AX_HEADER_LEN
-            else:
-                chunk_size = (self._comms.wMaxPacketSize - 1) \
-                             - self._comms.AX_TBP_I2C_DEV_HEAD_LEN \
-                             - self._comms.AX_HEADER_LEN
-        except AttributeError:
-            chunk_size = self.u31.PAGE_SIZE - 1
-
-        while offset < length:
-            # Calculate how much data to transfer, up to the max transfer size
-            if (offset + chunk_size) < length:
-                length_to_write = chunk_size
-            else:
-                length_to_write = length - offset
-
-            # Extract the data to be transferred
-            payload_chunk = chunk[offset:(offset + length_to_write)]
-
-            # Send the data to aXiom
-            self._comms.write_page(self.BLP_FIFO_ADDRESS, length_to_write, payload_chunk)
-
-            # Ensure aXiom is available to process our request
-            self.bootloader_wait_until_not_busy()
-            offset += length_to_write
 
     def close(self):
         self._comms.close()
