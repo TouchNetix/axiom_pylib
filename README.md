@@ -6,13 +6,15 @@ This library provides users the building blocks to communicate with the aXiom to
 
 `axiom.py` - Provides the main business logic and interface to aXiom.
 
+`Bootloader.py` - Manages the logic for handling firmware updates.
+
 `I2C_Comms.py` - Provides the logic for performing I2C comms to aXiom.
 
 `SPI_Comms.py` - Provides the logic for performing SPI comms to aXiom.
 
 `USB_Comms.py` - Provides the logic for performing USB comms to aXiom.
 
-`CDU_Common.py` - Some usages are CDU (command driven usages). These usages some some additional logic to read/write their contents.
+`CDU_Common.py` - Some usages are CDU (command driven usages). These usages use additional logic to read/write their contents.
 
 `u02_SystemManager.py` - Provides access to aXiom's system manager. The aXiom device can be reset, jump to bootloader, save config changes to flash etc.
 
@@ -92,7 +94,7 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="28e9", ATTRS{idProduct}=="2f04", MODE="06
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="28e9", ATTRS{idProduct}=="2f08", MODE="0666"
 ```
 
-The changes will apply on the next bootup. To apply the changes immediately:
+The changes will apply on the next reboot. To apply the changes immediately:
 
 ```console
 sudo udevadm control --reload-rules
