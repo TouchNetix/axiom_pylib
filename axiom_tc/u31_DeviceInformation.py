@@ -1,6 +1,6 @@
 # Copyright (c) 2024 TouchNetix
 # 
-# This file is part of [Project Name] and is released under the MIT License: 
+# This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
 import struct
@@ -82,6 +82,11 @@ class u31_DeviceInformation:
     def print_device_info(self):
         self._print_registers()
 
+    def convert_device_id_to_string(self, device_id):
+        device_channel_count = device_id & 0x3FF
+        device_variant = (device_id & 0x7C00) >> 10
+        return "AX%u%c" % (device_channel_count, chr(ord('A') + device_variant))
+
     def get_device_info_short(self):
         return self.convert_device_info_to_string(self.reg_device_id, self.reg_fw_variant, self.reg_fw_major,
                                                   self.reg_fw_minor, self.reg_fw_patch, self.reg_fw_status)
@@ -92,15 +97,14 @@ class u31_DeviceInformation:
                                                                   fw_variant))
 
     def convert_firmware_version_to_string(self, major, minor, patch, status, fw_variant):
-        if major >= 4 and minor >= 8:
-            return "%d.%d.%d-%s %s" % (major, minor, patch, self.FW_STATUS[status], self.FW_VARIANTS[fw_variant])
+        if self.reg_mode == 0:
+            if major >= 4 and minor >= 8:
+                return "%d.%d.%d-%s %s" % (major, minor, patch, self.FW_STATUS[status], self.FW_VARIANTS[fw_variant])
+            else:
+                return "%d.%02d-%s (RC%d) %s" % (
+                    major, minor, self.FW_STATUS[status], patch, self.FW_VARIANTS[fw_variant])
         else:
-            return "%d.%02d-%s (RC%d) %s" % (major, minor, self.FW_STATUS[status], patch, self.FW_VARIANTS[fw_variant])
-
-    def convert_device_id_to_string(self, device_id):
-        device_channel_count = device_id & 0x3FF
-        device_variant = (device_id & 0x7C00) >> 10
-        return "AX%u%c" % (device_channel_count, chr(ord('A') + device_variant))
+            return "Bootloader %d.%02d" % (major, minor)
 
     def _unpack(self):
         self._unpack_registers()
@@ -115,7 +119,6 @@ class u31_DeviceInformation:
 
         # Verify the device is not in bootloader mode
         if self.reg_mode != 0:
-            print("Cannot build usage table, aXiom is in bootloader mode")
             return False
 
         target_address = self.convert_usage_to_target_address(0x31, 1)
@@ -159,7 +162,7 @@ class u31_DeviceInformation:
             print("Usage table not yet initialised")
 
     def convert_usage_to_target_address(self, usage, page=0):
-        if self._usage_table_populated is False and usage == 0x31:
+        if self._usage_table_populated is False or usage == 0x31:
             target_address = 0x0000 + (page << 8)
         else:
             target_address = (self._usage_table[usage].start_page << 8) + (page << 8)
@@ -219,10 +222,18 @@ class u31_DeviceInformation:
         silicon_rev = chr(0x41 + self.reg_silicon_rev)
 
         print("u31 Device Information")
-        print("  Device ID   : %s" % (self.convert_device_id_to_string(self.reg_device_id)))
+        print("  Device ID   : %s" % (convert_device_id_to_string(self.reg_device_id)))
         print("  FW Revision : %s" % (
             self.convert_firmware_version_to_string(self.reg_fw_major, self.reg_fw_minor, self.reg_fw_patch,
                                                     self.reg_fw_status, self.reg_fw_variant)))
         print("  BL Revision : %d.%02d" % (self.reg_bl_major, self.reg_bl_minor))
         print("  Silicon     : 0x%04X (Rev %c)" % (self.reg_jedec_id, silicon_rev))
+
+    @property
+    def usage_table(self):
+        return self._usage_table
+
+    @property
+    def usage_table_populated(self):
+        return self._usage_table_populated
 # endregion

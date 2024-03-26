@@ -1,6 +1,6 @@
 # Copyright (c) 2024 TouchNetix
 # 
-# This file is part of [Project Name] and is released under the MIT License: 
+# This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
 import hid
@@ -315,7 +315,7 @@ class USB_Comms:
         buffer = list(self.EMPTY_PKT)
         buffer[1] = self.AX_CMD_RESET
         self.__device.write(bytes(buffer[0:self.hidPayloadSize]))
-        # There is no response, the bridge will soft reset and re-enumerate on the USB bus...
+        # There is no response, the bridge will be soft reset and re-enumerate on the USB bus
 
     def send_null(self):
         buffer_wr = list(self.EMPTY_PKT)

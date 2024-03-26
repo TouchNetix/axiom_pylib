@@ -1,6 +1,6 @@
 # Copyright (c) 2024 TouchNetix
 # 
-# This file is part of [Project Name] and is released under the MIT License: 
+# This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
 from time import sleep
@@ -29,7 +29,6 @@ class CDU_Common:
 
     def __cdu_query(self, usage):
         cdu_buffer = [0x00] * self.__axiom.get_usage_length(usage)
-        cdu_usage_length = 0
 
         command = CDU_Common.CDU_CMD_QUERY
 

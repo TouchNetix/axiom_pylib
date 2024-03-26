@@ -1,10 +1,9 @@
 # Copyright (c) 2024 TouchNetix
 # 
-# This file is part of [Project Name] and is released under the MIT License: 
+# This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
 import struct
-from time import sleep
 
 
 class u32_DeviceCapabilities:
@@ -47,8 +46,7 @@ class u32_DeviceCapabilities:
         self._usage_binary_data = self._axiom.read_usage(self.USAGE_ID)
         self._unpack()
 
-    def write(self, write_to_nvm=False):
-        self.read()
+    def write(self):
         raise Exception("Cannot write to u33. u33 is a read-only usage.")
 
     def print(self):
@@ -96,7 +94,7 @@ class u32_DeviceCapabilities:
             num_cts_driven_traces, num_aux_driven_traces, num_a_channels, num_b_channels, \
             num_c_channels, num_d_channels, num_e_channels, num_f_channels, max_map_lengthbytes, \
             max_baseline_length_bytes, num_baselines, _, interfaces, khz_to_jump_thousands = struct.unpack(
-            "<H10B2HBBHI", bytes(bytearray(self._usage_binary_data[0:24])))
+                "<H10B2H2BHI", bytes(bytearray(self._usage_binary_data[0:24])))
 
         self.reg_max_cts_nodes = max_cts_nodes
         self.reg_num_cts_channels = num_cts_channels

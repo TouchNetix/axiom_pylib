@@ -1,10 +1,9 @@
 # Copyright (c) 2024 TouchNetix
 # 
-# This file is part of [Project Name] and is released under the MIT License: 
+# This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
 import struct
-from time import sleep
 
 
 class u33_CRCData:
@@ -116,7 +115,7 @@ class u33_CRCData:
             if other_u33._usage_revision < 3:
                 # The "other" u33 doesn't contain u77, skip it and assume CRC is OK
                 if print_results:
-                    print("  u77 DoD Calibration Data CRC : 0x%08X - NOTPRESENT - SKIPPED" % (
+                    print("  u77 DoD Calibration Data CRC : 0x%08X - NOT PRESENT - SKIPPED" % (
                         self.reg_u77_dod_calibration_data_crc))
             else:
                 u77_ok = self.reg_u77_dod_calibration_data_crc == other_u33.reg_u77_dod_calibration_data_crc
@@ -138,7 +137,7 @@ class u33_CRCData:
 
         if do_u94_check:
             u94_ok = self.reg_u94_delta_scale_map_cdu_crc == other_u33.reg_u94_delta_scale_map_cdu_crc
-            if not u93_ok:
+            if not u94_ok:
                 overall_u33_ok = False
             if print_results:
                 print("  u94 Delta Scale Map CRC      : 0x%08X - 0x%08X - %s" % (
@@ -156,7 +155,7 @@ class u33_CRCData:
         self.reg_bootloader_crc = 0
         self.reg_nvltl_usage_config_crc = 0
         self.reg_vltl_usage_config_crc = 0
-        self.reg_u05_commenrs_crc = 0
+        self.reg_u05_comments_crc = 0
         self.reg_u22_sequence_data_cdu_crc = 0
         self.reg_u43_hotspots_cdu_crc = 0
         self.reg_u93_profiles_cdu_crc = 0
@@ -164,14 +163,15 @@ class u33_CRCData:
         self.reg_runtime_hash = 0
 
     def _unpack_uifrev1(self):
-        rt_crc, rt_nvm_crc, bl_crc, nvltl_config_crc, vltl_config_crc, u05_crc, u22_crc, u43_crc, u93_crc, u94_crc, hash = struct.unpack(
+        (rt_crc, rt_nvm_crc, bl_crc, nvltl_config_crc, vltl_config_crc, u05_crc, u22_crc, u43_crc, u93_crc, u94_crc,
+         hash) = struct.unpack(
             "<11I", bytes(bytearray(self._usage_binary_data[0:44])))
         self.reg_runtime_crc = rt_crc
         self.reg_runtime_nvm_crc = rt_nvm_crc
         self.reg_bootloader_crc = bl_crc
         self.reg_nvltl_usage_config_crc = nvltl_config_crc
         self.reg_vltl_usage_config_crc = vltl_config_crc
-        self.reg_u05_commenrs_crc = u05_crc
+        self.reg_u05_comments_crc = u05_crc
         self.reg_u22_sequence_data_cdu_crc = u22_crc
         self.reg_u43_hotspots_cdu_crc = u43_crc
         self.reg_u93_profiles_cdu_crc = u93_crc
@@ -187,7 +187,7 @@ class u33_CRCData:
         print("  RAM Usage Config CRC    : 0x{:08X}".format(self.reg_vltl_usage_config_crc))
 
         if self._axiom.u31.is_usage_present_on_device(0x05):
-            print("  u05 Comments CRC        : 0x{:08X}".format(self.reg_u05_commenrs_crc))
+            print("  u05 Comments CRC        : 0x{:08X}".format(self.reg_u05_comments_crc))
 
         if self._axiom.u31.is_usage_present_on_device(0x22):
             print("  u22 Sequence Data CRC   : 0x{:08X}".format(self.reg_u22_sequence_data_cdu_crc))
@@ -218,8 +218,8 @@ class u33_CRCData:
         self.reg_runtime_hash = 0
 
     def _unpack_uifrev2(self):
-        rt_crc, rt_nvm_crc, bl_crc, nvltl_config_crc, vltl_config_crc, u22_crc, u43_crc, u93_crc, u94_crc, hash = struct.unpack(
-            "<10I", bytes(bytearray(self._usage_binary_data[0:40])))
+        rt_crc, rt_nvm_crc, bl_crc, nvltl_config_crc, vltl_config_crc, u22_crc, u43_crc, u93_crc, u94_crc, hash = (
+            struct.unpack("<10I", bytes(bytearray(self._usage_binary_data[0:40]))))
         self.reg_runtime_crc = rt_crc
         self.reg_runtime_nvm_crc = rt_nvm_crc
         self.reg_bootloader_crc = bl_crc
@@ -269,7 +269,8 @@ class u33_CRCData:
         self.reg_runtime_hash = 0
 
     def _unpack_uifrev3(self):
-        rt_crc, rt_nvm_crc, bl_crc, nvltl_config_crc, vltl_config_crc, u22_crc, u43_crc, u77_crc, u93_crc, u94_crc, hash = struct.unpack(
+        (rt_crc, rt_nvm_crc, bl_crc, nvltl_config_crc, vltl_config_crc, u22_crc, u43_crc, u77_crc, u93_crc, u94_crc,
+         hash) = struct.unpack(
             "<11I", bytes(bytearray(self._usage_binary_data[0:44])))
         self.reg_runtime_crc = rt_crc
         self.reg_runtime_nvm_crc = rt_nvm_crc

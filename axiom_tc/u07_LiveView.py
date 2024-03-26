@@ -1,9 +1,79 @@
 # Copyright (c) 2024 TouchNetix
 # 
-# This file is part of [Project Name] and is released under the MIT License: 
+# This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
 import struct
+
+
+def convert_u83_measurement_noise_to_string(noise_as_float100):
+    return "%.2f" % (float(noise_as_float100) / 100)
+
+
+def convert_u83_channel_state_to_string(state):
+    if state == 0:
+        return "Scan"
+    elif state == 1:
+        return "Capture"
+    elif state == 2:
+        return "Settle"
+    elif state == 3:
+        return "Qualification"
+    elif state == 4:
+        return "Ready"
+    elif state == 5:
+        return "Noisy"
+    elif state == 6:
+        return "Inactive"
+    elif state == 7:
+        return "Reset"
+    else:
+        return "<UNKNOWN_U83_CHANNEL_STATE>"
+
+
+def convert_self_test_result_to_string(result):
+    if result == 0x00:
+        return "Not Yet Run"
+    elif result == 0x01:
+        return "In Progress"
+    elif result == 0x02:
+        return "Pass"
+    elif result == 0x03:
+        return "Must Retry"
+    elif result == 0x7E:
+        return "Not Implemented"
+    elif result == 0x7F:
+        return "Never Run"
+    elif (result & 0x80) != 0:
+        return "Fail (Extended Error Bits: 0x%02X)" % (result & 0x7F)
+    else:
+        return "<UNKNOWN_SELF_TEST_RESULT>"
+
+
+def convert_self_test_overall_result_to_string(overall_result):
+    if overall_result == 0x01:
+        return "In Progress"
+    elif overall_result == 0x02:
+        return "Pass"
+    elif overall_result == 0x7D:
+        return "No Tests Done"
+    elif overall_result == 0x7F:
+        return "Never Run"
+    elif overall_result == 0x80:
+        return "Fail"
+    else:
+        return "<UNKNOWN_OVERALL_RESULT>"
+
+
+def convert_self_test_cause_to_string(cause):
+    if cause == 0:
+        return "Boot"
+    elif cause == 1:
+        return "Heartbeat"
+    elif cause == 2:
+        return "Host Triggered"
+    else:
+        return "<UNKNOWN_CAUSE>"
 
 
 class u07_LiveView:
@@ -57,70 +127,6 @@ class u07_LiveView:
         self._unpack_registers()
 
     # region Value to String Conversions
-    def convert_self_test_cause_to_string(self, cause):
-        if cause == 0:
-            return "Boot"
-        elif cause == 1:
-            return "Heartbeat"
-        elif cause == 2:
-            return "Host Triggered"
-        else:
-            return "<UNKNOWN_CAUSE>"
-
-    def convert_self_test_overall_result_to_string(self, overall_result):
-        if overall_result == 0x01:
-            return "In Progress"
-        elif overall_result == 0x02:
-            return "Pass"
-        elif overall_result == 0x7D:
-            return "No Tests Done"
-        elif overall_result == 0x7F:
-            return "Never Run"
-        elif overall_result == 0x80:
-            return "Fail"
-        else:
-            return "<UNKNOWN_OVERALL_RESULT>"
-
-    def convert_self_test_result_to_string(self, result):
-        if result == 0x00:
-            return "Not Yet Run"
-        elif result == 0x01:
-            return "In Progress"
-        elif result == 0x02:
-            return "Pass"
-        elif result == 0x03:
-            return "Must Retry"
-        elif result == 0x7E:
-            return "Not Implemented"
-        elif result == 0x7F:
-            return "Never Run"
-        elif (result & 0x80) != 0:
-            return "Fail (Extended Error Bits: 0x%02X)" % (result & 0x7F)
-        else:
-            return "<UNKNOWN_SELF_TEST_RESULT>"
-
-    def convert_u83_channel_state_to_string(self, state):
-        if state == 0:
-            return "Scan"
-        elif state == 1:
-            return "Capture"
-        elif state == 2:
-            return "Settle"
-        elif state == 3:
-            return "Qualification"
-        elif state == 4:
-            return "Ready"
-        elif state == 5:
-            return "Noisy"
-        elif state == 6:
-            return "Inactive"
-        elif state == 7:
-            return "Reset"
-        else:
-            return "<UNKNOWN_U83_CHANNEL_STATE>"
-
-    def convert_u83_measurement_noise_to_string(self, noise_as_float100):
-        return "%.2f" % (float(noise_as_float100) / 100)
 
     # endregion
 
@@ -328,47 +334,47 @@ class u07_LiveView:
         print("")
         print("  Drifting Indicators")
         print("  Trans Drifting : %s" % ("Drifting" if self.reg_trans_drifting_active == 1 else "Not Drifting"))
-        print("  Abs Drifiting  : %s" % ("Drifting" if self.reg_abs_drifting_active == 1 else "Not Drifting"))
+        print("  Abs Drifting   : %s" % ("Drifting" if self.reg_abs_drifting_active == 1 else "Not Drifting"))
         print("  Aux Drifting   : %s" % ("Drifting" if self.reg_aux_drifting_active == 1 else "Not Drifting"))
         print("")
         print("  Self Test Status")
         print(
             "    u06 Self Test Status               : %s" % ("Idle" if self.reg_u06_self_test_status == 0 else "Busy"))
-        print("    u06 Self Test Triggered By         : %s" % self.convert_self_test_cause_to_string(
+        print("    u06 Self Test Triggered By         : %s" % convert_self_test_cause_to_string(
             self.reg_u06_self_test_cause))
         print("    u06 Self Test Current Test Running : %u" % self.reg_u06_self_test_number)
-        print("    u06 Self Test Overall Result       : %s" % self.convert_self_test_overall_result_to_string(
+        print("    u06 Self Test Overall Result       : %s" % convert_self_test_overall_result_to_string(
             self.reg_u06_self_test_overall_result))
         print("    u06 Self Test Debug Data           : %u" % self.reg_u06_self_test_general_debug)
         print("")
         print("  Self Test Results")
-        print("    Test  0 CPU RAM Test                      : %s" % self.convert_self_test_result_to_string(
+        print("    Test  0 CPU RAM Test                      : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[0]))
-        print("    Test  1 AE Baseline RAM Test              : %s" % self.convert_self_test_result_to_string(
+        print("    Test  1 AE Baseline RAM Test              : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[1]))
-        print("    Test  2 AE Internal RAM Test              : %s" % self.convert_self_test_result_to_string(
+        print("    Test  2 AE Internal RAM Test              : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[2]))
-        print("    Test  3 VDDA Test                         : %s" % self.convert_self_test_result_to_string(
+        print("    Test  3 VDDA Test                         : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[3]))
-        print("    Test  4 AE Test                           : %s" % self.convert_self_test_result_to_string(
+        print("    Test  4 AE Test                           : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[4]))
-        print("    Test  5 Sense and Shield Pin Leakage Test : %s" % self.convert_self_test_result_to_string(
+        print("    Test  5 Sense and Shield Pin Leakage Test : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[5]))
-        print("    Test  6 Trans Cap Signal Limits Test      : %s" % self.convert_self_test_result_to_string(
+        print("    Test  6 Trans Cap Signal Limits Test      : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[6]))
-        print("    Test  7 Abs Cap Signal Limits Test        : %s" % self.convert_self_test_result_to_string(
+        print("    Test  7 Abs Cap Signal Limits Test        : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[7]))
-        print("    Test  8 AUX Signal Limits Test            : %s" % self.convert_self_test_result_to_string(
+        print("    Test  8 AUX Signal Limits Test            : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[8]))
-        print("    Test  9 CRC Generate and Check Test       : %s" % self.convert_self_test_result_to_string(
+        print("    Test  9 CRC Generate and Check Test       : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[9]))
-        print("    Test 10 nIRQ Pin Test                     : %s" % self.convert_self_test_result_to_string(
+        print("    Test 10 nIRQ Pin Test                     : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[10]))
-        print("    Test 11 NVM Test                          : %s" % self.convert_self_test_result_to_string(
+        print("    Test 11 NVM Test                          : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[11]))
-        print("    Test 12 RTC Test                          : %s" % self.convert_self_test_result_to_string(
+        print("    Test 12 RTC Test                          : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[12]))
-        print("    Test 13 VDDC Test                         : %s" % self.convert_self_test_result_to_string(
+        print("    Test 13 VDDC Test                         : %s" % convert_self_test_result_to_string(
             self.reg_u06_self_test_results[13]))
         print("")
         print("GPIOs State")
@@ -415,32 +421,32 @@ class u07_LiveView:
         print("  u83 Channel Status")
         print("                  %13s %13s %13s" % ("0".center(13), "1".center(13), "2".center(13)))
         print("    Trans State : %13s %13s %13s" % (
-            self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_trans_state[0]),
-            self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_trans_state[1]),
-            self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_trans_state[2])))
+            convert_u83_channel_state_to_string(self.reg_u83_channel_status_trans_state[0]),
+            convert_u83_channel_state_to_string(self.reg_u83_channel_status_trans_state[1]),
+            convert_u83_channel_state_to_string(self.reg_u83_channel_status_trans_state[2])))
         print("    Abs State   : %13s %13s %13s" % (
-            self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_abs_state[0]),
-            self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_abs_state[1]),
-            self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_abs_state[2])))
+            convert_u83_channel_state_to_string(self.reg_u83_channel_status_abs_state[0]),
+            convert_u83_channel_state_to_string(self.reg_u83_channel_status_abs_state[1]),
+            convert_u83_channel_state_to_string(self.reg_u83_channel_status_abs_state[2])))
         print("    Aux State   : %13s %13s %13s" % (
-            self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[0]),
-            self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[1]),
-            self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[2])))
+            convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[0]),
+            convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[1]),
+            convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[2])))
         print("    Active OP   : %13u %13u %13u" % (
             self.reg_u83_channel_status_operating_point[0], self.reg_u83_channel_status_operating_point[1],
             self.reg_u83_channel_status_operating_point[2]))
         print("    Trans Noise : %12s%% %12s%% %12s%%" % (
-            self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_trans_noise[0]),
-            self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_trans_noise[1]),
-            self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_trans_noise[2])))
+            convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_trans_noise[0]),
+            convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_trans_noise[1]),
+            convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_trans_noise[2])))
         print("    Abs Noise   : %12s%% %12s%% %12s%%" % (
-            self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[0]),
-            self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[1]),
-            self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[2])))
+            convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[0]),
+            convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[1]),
+            convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[2])))
         print("    Aux Noise   : %12s%% %12s%% %12s%%" % (
-            self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[0]),
-            self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[1]),
-            self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[2])))
+            convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[0]),
+            convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[1]),
+            convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[2])))
 
     # endregion
 
@@ -587,37 +593,37 @@ def _print_registers_uifrev8(self):
     print("  Self Test Status")
     print(
         "    u06 Self Test Status               : %s" % ("Idle" if self.reg_u06_self_test_status == 0 else "Busy"))
-    print("    u06 Self Test Triggered By         : %s" % self.convert_self_test_cause_to_string(
+    print("    u06 Self Test Triggered By         : %s" % convert_self_test_cause_to_string(
         self.reg_u06_self_test_cause))
     print("    u06 Self Test Current Test Running : %u" % self.reg_u06_self_test_number)
-    print("    u06 Self Test Overall Result       : %s" % self.convert_self_test_overall_result_to_string(
+    print("    u06 Self Test Overall Result       : %s" % convert_self_test_overall_result_to_string(
         self.reg_u06_self_test_overall_result))
     print("    u06 Self Test Debug Data           : %u" % self.reg_u06_self_test_general_debug)
     print("")
     print("  Self Test Results")
-    print("    Test  0 CPU RAM Test                      : %s" % self.convert_self_test_result_to_string(
+    print("    Test  0 CPU RAM Test                      : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[0]))
-    print("    Test  1 AE Baseline RAM Test              : %s" % self.convert_self_test_result_to_string(
+    print("    Test  1 AE Baseline RAM Test              : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[1]))
-    print("    Test  2 AE Internal RAM Test              : %s" % self.convert_self_test_result_to_string(
+    print("    Test  2 AE Internal RAM Test              : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[2]))
-    print("    Test  3 VDDA Test                         : %s" % self.convert_self_test_result_to_string(
+    print("    Test  3 VDDA Test                         : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[3]))
-    print("    Test  4 AE Test                           : %s" % self.convert_self_test_result_to_string(
+    print("    Test  4 AE Test                           : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[4]))
-    print("    Test  5 Sense and Shield Pin Leakage Test : %s" % self.convert_self_test_result_to_string(
+    print("    Test  5 Sense and Shield Pin Leakage Test : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[5]))
-    print("    Test  8 AUX Signal Limits Test            : %s" % self.convert_self_test_result_to_string(
+    print("    Test  8 AUX Signal Limits Test            : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[8]))
-    print("    Test  9 CRC Generate and Check Test       : %s" % self.convert_self_test_result_to_string(
+    print("    Test  9 CRC Generate and Check Test       : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[9]))
-    print("    Test 10 nIRQ Pin Test                     : %s" % self.convert_self_test_result_to_string(
+    print("    Test 10 nIRQ Pin Test                     : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[10]))
-    print("    Test 11 NVM Test                          : %s" % self.convert_self_test_result_to_string(
+    print("    Test 11 NVM Test                          : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[11]))
-    print("    Test 12 RTC Test                          : %s" % self.convert_self_test_result_to_string(
+    print("    Test 12 RTC Test                          : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[12]))
-    print("    Test 13 VDDC Test                         : %s" % self.convert_self_test_result_to_string(
+    print("    Test 13 VDDC Test                         : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[13]))
     print("")
     print("GPIOs State")
@@ -636,26 +642,26 @@ def _print_registers_uifrev8(self):
     print("  u83 Channel Status")
     print("                  %13s %13s %13s" % ("0".center(13), "1".center(13), "2".center(13)))
     print("    Aux State   : %13s %13s %13s" % (
-        self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[0]),
-        self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[1]),
-        self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[2])))
+        convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[0]),
+        convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[1]),
+        convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[2])))
     print("    Active OP   : %13u %13u %13u" % (
         self.reg_u83_channel_status_operating_point[0], self.reg_u83_channel_status_operating_point[1],
         self.reg_u83_channel_status_operating_point[2]))
     print("    Aux Noise   : %12s%% %12s%% %12s%%" % (
-        self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[0]),
-        self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[1]),
-        self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[2])))
+        convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[0]),
+        convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[1]),
+        convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[2])))
     print("  u83 Channel Status")
     print("                  %13s %13s %13s" % ("0".center(13), "1".center(13), "2".center(13)))
     print("     AutoTune Error : %13s %13s %13s" % (
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_error_code[0]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_error_code[1]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_error_code[2])))
+        convert_self_test_result_to_string(self.reg_u83_channel_status_error_code[0]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_error_code[1]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_error_code[2])))
     print("     Aux Operating Point Errors : %13s %13s %13s" % (
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_aux_operating_point[0]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_aux_operating_point[1]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_aux_operating_point[2])))
+        convert_self_test_result_to_string(self.reg_u83_channel_status_aux_operating_point[0]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_aux_operating_point[1]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_aux_operating_point[2])))
 
 
 # endregion
@@ -892,47 +898,47 @@ def _print_registers_uifrev9(self):
     print("")
     print("  Drifting Indicators")
     print("  Trans Drifting : %s" % ("Drifting" if self.reg_trans_drifting_active == 1 else "Not Drifting"))
-    print("  Abs Drifiting  : %s" % ("Drifting" if self.reg_abs_drifting_active == 1 else "Not Drifting"))
+    print("  Abs Drifting   : %s" % ("Drifting" if self.reg_abs_drifting_active == 1 else "Not Drifting"))
     print("  Aux Drifting   : %s" % ("Drifting" if self.reg_aux_drifting_active == 1 else "Not Drifting"))
     print("")
     print("  Self Test Status")
     print(
         "    u06 Self Test Status               : %s" % ("Idle" if self.reg_u06_self_test_status == 0 else "Busy"))
-    print("    u06 Self Test Triggered By         : %s" % self.convert_self_test_cause_to_string(
+    print("    u06 Self Test Triggered By         : %s" % convert_self_test_cause_to_string(
         self.reg_u06_self_test_cause))
     print("    u06 Self Test Current Test Running : %u" % self.reg_u06_self_test_number)
-    print("    u06 Self Test Overall Result       : %s" % self.convert_self_test_overall_result_to_string(
+    print("    u06 Self Test Overall Result       : %s" % convert_self_test_overall_result_to_string(
         self.reg_u06_self_test_overall_result))
     print("    u06 Self Test Debug Data           : %u" % self.reg_u06_self_test_general_debug)
     print("")
     print("  Self Test Results")
-    print("    Test  0 CPU RAM Test                      : %s" % self.convert_self_test_result_to_string(
+    print("    Test  0 CPU RAM Test                      : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[0]))
-    print("    Test  1 AE Baseline RAM Test              : %s" % self.convert_self_test_result_to_string(
+    print("    Test  1 AE Baseline RAM Test              : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[1]))
-    print("    Test  2 AE Internal RAM Test              : %s" % self.convert_self_test_result_to_string(
+    print("    Test  2 AE Internal RAM Test              : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[2]))
-    print("    Test  3 VDDA Test                         : %s" % self.convert_self_test_result_to_string(
+    print("    Test  3 VDDA Test                         : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[3]))
-    print("    Test  4 AE Test                           : %s" % self.convert_self_test_result_to_string(
+    print("    Test  4 AE Test                           : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[4]))
-    print("    Test  5 Sense and Shield Pin Leakage Test : %s" % self.convert_self_test_result_to_string(
+    print("    Test  5 Sense and Shield Pin Leakage Test : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[5]))
-    print("    Test  6 Trans Cap Signal Limits Test      : %s" % self.convert_self_test_result_to_string(
+    print("    Test  6 Trans Cap Signal Limits Test      : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[6]))
-    print("    Test  7 Abs Cap Signal Limits Test        : %s" % self.convert_self_test_result_to_string(
+    print("    Test  7 Abs Cap Signal Limits Test        : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[7]))
-    print("    Test  8 AUX Signal Limits Test            : %s" % self.convert_self_test_result_to_string(
+    print("    Test  8 AUX Signal Limits Test            : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[8]))
-    print("    Test  9 CRC Generate and Check Test       : %s" % self.convert_self_test_result_to_string(
+    print("    Test  9 CRC Generate and Check Test       : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[9]))
-    print("    Test 10 nIRQ Pin Test                     : %s" % self.convert_self_test_result_to_string(
+    print("    Test 10 nIRQ Pin Test                     : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[10]))
-    print("    Test 11 NVM Test                          : %s" % self.convert_self_test_result_to_string(
+    print("    Test 11 NVM Test                          : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[11]))
-    print("    Test 12 RTC Test                          : %s" % self.convert_self_test_result_to_string(
+    print("    Test 12 RTC Test                          : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[12]))
-    print("    Test 13 VDDC Test                         : %s" % self.convert_self_test_result_to_string(
+    print("    Test 13 VDDC Test                         : %s" % convert_self_test_result_to_string(
         self.reg_u06_self_test_results[13]))
     print("")
     print("GPIOs State")
@@ -979,54 +985,54 @@ def _print_registers_uifrev9(self):
     print("  u83 Channel Status")
     print("                  %13s %13s %13s" % ("0".center(13), "1".center(13), "2".center(13)))
     print("    Trans State : %13s %13s %13s" % (
-        self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_trans_state[0]),
-        self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_trans_state[1]),
-        self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_trans_state[2])))
+        convert_u83_channel_state_to_string(self.reg_u83_channel_status_trans_state[0]),
+        convert_u83_channel_state_to_string(self.reg_u83_channel_status_trans_state[1]),
+        convert_u83_channel_state_to_string(self.reg_u83_channel_status_trans_state[2])))
     print("    Abs State   : %13s %13s %13s" % (
-        self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_abs_state[0]),
-        self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_abs_state[1]),
-        self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_abs_state[2])))
+        convert_u83_channel_state_to_string(self.reg_u83_channel_status_abs_state[0]),
+        convert_u83_channel_state_to_string(self.reg_u83_channel_status_abs_state[1]),
+        convert_u83_channel_state_to_string(self.reg_u83_channel_status_abs_state[2])))
     print("    Aux State   : %13s %13s %13s" % (
-        self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[0]),
-        self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[1]),
-        self.convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[2])))
+        convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[0]),
+        convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[1]),
+        convert_u83_channel_state_to_string(self.reg_u83_channel_status_aux_state[2])))
     print("    Active OP   : %13u %13u %13u" % (
         self.reg_u83_channel_status_operating_point[0], self.reg_u83_channel_status_operating_point[1],
         self.reg_u83_channel_status_operating_point[2]))
     print("    Trans Noise : %12s%% %12s%% %12s%%" % (
-        self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_trans_noise[0]),
-        self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_trans_noise[1]),
-        self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_trans_noise[2])))
+        convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_trans_noise[0]),
+        convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_trans_noise[1]),
+        convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_trans_noise[2])))
     print("    Abs Noise   : %12s%% %12s%% %12s%%" % (
-        self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[0]),
-        self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[1]),
-        self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[2])))
+        convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[0]),
+        convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[1]),
+        convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_abs_noise[2])))
     print("    Aux Noise   : %12s%% %12s%% %12s%%" % (
-        self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[0]),
-        self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[1]),
-        self.convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[2])))
+        convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[0]),
+        convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[1]),
+        convert_u83_measurement_noise_to_string(self.reg_u83_channel_status_aux_noise[2])))
     print("  u83 Channel Status")
     print("                  %13s %13s %13s" % ("0".center(13), "1".center(13), "2".center(13)))
     print("     AutoTune Error : %13s %13s %13s" % (
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_error_code[0]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_error_code[1]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_error_code[2])))
+        convert_self_test_result_to_string(self.reg_u83_channel_status_error_code[0]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_error_code[1]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_error_code[2])))
     print("     Trans Operating Point Errors : %13s %13s %13s" % (
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_trans_operating_point[0]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_trans_operating_point[1]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_trans_operating_point[2])))
+        convert_self_test_result_to_string(self.reg_u83_channel_status_trans_operating_point[0]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_trans_operating_point[1]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_trans_operating_point[2])))
     print("     Abs Cols Operating Point Errors : %13s %13s %13s" % (
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_abs_cols_operating_point[0]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_abs_cols_operating_point[1]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_abs_cols_operating_point[2])))
+        convert_self_test_result_to_string(self.reg_u83_channel_status_abs_cols_operating_point[0]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_abs_cols_operating_point[1]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_abs_cols_operating_point[2])))
     print("     Abs Rows Operating Point Errors : %13s %13s %13s" % (
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_abs_rows_operating_point[0]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_abs_rows_operating_point[1]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_abs_rows_operating_point[2])))
+        convert_self_test_result_to_string(self.reg_u83_channel_status_abs_rows_operating_point[0]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_abs_rows_operating_point[1]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_abs_rows_operating_point[2])))
     print("     Aux Operating Point Errors : %13s %13s %13s" % (
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_aux_operating_point[0]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_aux_operating_point[1]),
-        self.convert_self_test_result_to_string(self.reg_u83_channel_status_aux_operating_point[2])))
+        convert_self_test_result_to_string(self.reg_u83_channel_status_aux_operating_point[0]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_aux_operating_point[1]),
+        convert_self_test_result_to_string(self.reg_u83_channel_status_aux_operating_point[2])))
 
 
 # endregion
