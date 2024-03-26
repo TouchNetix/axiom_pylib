@@ -25,12 +25,6 @@ class _Usage_Table_Entry:
                            "Report" if self.is_report else "")
 
 
-def convert_device_id_to_string(device_id):
-    device_channel_count = device_id & 0x3FF
-    device_variant = (device_id & 0x7C00) >> 10
-    return "AX%u%c" % (device_channel_count, chr(ord('A') + device_variant))
-
-
 class u31_DeviceInformation:
     USAGE_ID = 0x31
 
@@ -88,12 +82,17 @@ class u31_DeviceInformation:
     def print_device_info(self):
         self._print_registers()
 
+    def convert_device_id_to_string(self, device_id):
+        device_channel_count = device_id & 0x3FF
+        device_variant = (device_id & 0x7C00) >> 10
+        return "AX%u%c" % (device_channel_count, chr(ord('A') + device_variant))
+
     def get_device_info_short(self):
         return self.convert_device_info_to_string(self.reg_device_id, self.reg_fw_variant, self.reg_fw_major,
                                                   self.reg_fw_minor, self.reg_fw_patch, self.reg_fw_status)
 
     def convert_device_info_to_string(self, device_id, fw_variant, fw_ver_major, fw_ver_minor, fw_ver_patch, fw_status):
-        return "%s %s" % (convert_device_id_to_string(device_id),
+        return "%s %s" % (self.convert_device_id_to_string(device_id),
                           self.convert_firmware_version_to_string(fw_ver_major, fw_ver_minor, fw_ver_patch, fw_status,
                                                                   fw_variant))
 
