@@ -222,7 +222,7 @@ class u31_DeviceInformation:
         silicon_rev = chr(0x41 + self.reg_silicon_rev)
 
         print("u31 Device Information")
-        print("  Device ID   : %s" % (convert_device_id_to_string(self.reg_device_id)))
+        print("  Device ID   : %s" % (self.convert_device_id_to_string(self.reg_device_id)))
         print("  FW Revision : %s" % (
             self.convert_firmware_version_to_string(self.reg_fw_major, self.reg_fw_minor, self.reg_fw_patch,
                                                     self.reg_fw_status, self.reg_fw_variant)))
