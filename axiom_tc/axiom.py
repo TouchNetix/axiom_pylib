@@ -45,17 +45,34 @@ class axiom:
         else:
             self.u02 = u02_SystemManager(self)
 
-    def read_usage(self, usage):
+    def read_usage(self, usage, length=None):
         usage_content = []
 
         for pg in range(0, self.u31.usage_table[usage].num_pages):
-            read_length = self.u31.PAGE_SIZE
             # Calculate the remaining data to read for the last page
             if pg == (self.u31.usage_table[usage].num_pages - 1):
                 read_length = self.u31.usage_table[usage].length - (self.u31.PAGE_SIZE * pg)
+            else:
+                read_length = self.u31.PAGE_SIZE
+
+            # If the user requests a specific amount of data, calculate how much data to read
+            # for this page.
+            if length is not None:
+                if length > self.u31.usage_table[usage].length:
+                    # Someone has requested more data than is available by the usage. Leave
+                    # read_length unmodified, this will effectively cap the read length to
+                    # the size of the usage.
+                    pass
+                elif (self.u31.PAGE_SIZE * (pg + 1)) > length:
+                    # Recalculate the read_length based on the length request.
+                    read_length = length - (self.u31.PAGE_SIZE * pg)
 
             target_address = self.u31.convert_usage_to_target_address(usage, pg)
             usage_content += self._comms.read_page(target_address, read_length)
+
+            if read_length < self.u31.PAGE_SIZE:
+                # Not a full page was required, therefore exit the loop early.
+                break
 
         return usage_content
 
