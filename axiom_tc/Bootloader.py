@@ -66,7 +66,7 @@ class Bootloader:
                 raise TimeoutError
 
             # If busy, allow the bootloader to run a bit longer before asking again
-            sleep(0.001)
+            #sleep(0.001)
 
     def reset_axiom(self):
         self._comms.write_page(self.BLP_REG_COMMAND, 2, [0x02, 0x00])

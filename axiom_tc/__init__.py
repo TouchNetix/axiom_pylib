@@ -54,3 +54,9 @@ try:
     __all__.append("SPI_Comms")
 except ImportError:
     pass
+
+try:
+    from .TCP_Comms import *
+    __all__.append("TCP_Comms")
+except ImportError:
+    pass
