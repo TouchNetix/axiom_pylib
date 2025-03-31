@@ -3,8 +3,9 @@
 # This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
-from time import sleep
-
+import os
+import ctypes
+import time
 
 class Bootloader:
     # Bootloader protocol registers
@@ -55,6 +56,21 @@ class Bootloader:
         # Busy bit is bit 0 of byte 2
         return (status[2] & 0x01) != 0
 
+    def _precise_sleep(self, duration_seconds):
+        if os.name == 'nt':  # Windows
+            ctypes.windll.winmm.timeBeginPeriod(1)
+            time.sleep(duration_seconds)
+            ctypes.windll.winmm.timeEndPeriod(1)
+        elif os.name == 'posix':  # Linux/Unix
+            ctypes.CDLL('libc.so.6').usleep(int(duration_seconds * 1_000_000))  # Convert seconds to microseconds
+        else:
+            # An alternative approach to sleep for a precise duration
+            # This approach can be CPU intensive.
+            start = time.perf_counter()
+            while (time.perf_counter() - start) < duration:
+                pass
+        
+
     def _wait_until_not_busy(self):
         current_timeout = 0
         while self._get_busy_status():
@@ -65,16 +81,14 @@ class Bootloader:
                 print("ERROR: aXiom does not seem to be responding...")
                 raise TimeoutError
 
-            # If busy, allow the bootloader to run a bit longer before asking again
-            #sleep(0.001)
+            # If busy, allow the bootloader to run a bit longer before asking again.
+            # A time.sleep(0.001) is not precise enough, it takes more than 1ms.
+            self._precise_sleep(0.001)
 
     def reset_axiom(self):
         self._comms.write_page(self.BLP_REG_COMMAND, 2, [0x02, 0x00])
 
     def write_chunk(self, chunk):
-        # Ensure aXiom is available to process our request
-        self._wait_until_not_busy()
-
         offset = 0
         length = len(chunk)
 
@@ -102,9 +116,13 @@ class Bootloader:
             # Extract the data to be transferred
             payload_chunk = chunk[offset:(offset + length_to_write)]
 
+             # Ensure aXiom is available to process our request
+            self._wait_until_not_busy()
+
             # Send the data to aXiom
             self._comms.write_page(self.BLP_FIFO_ADDRESS, length_to_write, payload_chunk)
 
-            # Ensure aXiom is available to process our request
-            self._wait_until_not_busy()
             offset += length_to_write
+
+        # Wait for the last page write to complete
+        self._wait_until_not_busy()
