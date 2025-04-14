@@ -55,9 +55,9 @@ class TCP_Comms:
 
             message = bytes([self.CMD_AXIOM_COMMS, 4, chunk_length] + [ta_lsb, ta_msb, length_lsb, length_msb])
             self._sock.sendall(message)
-            response = self._sock.recv(chunk_length + 1)  # Receive chunk_length + 1 bytes (status + data)
+            response = self._sock.recv(chunk_length + 2)  # Receive chunk_length + 2 bytes (status + data)
 
-            data.extend(response[1:])  # Skip the first byte which is the status
+            data.extend(response[2:])  # Skip the first 2 bytes which is the status and length
 
             remaining_length -= chunk_length
             current_address += chunk_length  # Increment the address for the next chunk
@@ -80,7 +80,7 @@ class TCP_Comms:
 
             message = bytes([self.CMD_AXIOM_COMMS, 4 + chunk_length, 0] + [ta_lsb, ta_msb, length_lsb, length_msb] + chunk_payload)
             self._sock.sendall(message)
-            _ = self._sock.recv(1)  # Receive acknowledgment (1 byte)
+            _ = self._sock.recv(2)  # Receive acknowledgment (1 byte)
 
             remaining_length -= chunk_length
             current_address += chunk_length  # Increment the address for the next chunk
