@@ -67,9 +67,8 @@ class Bootloader:
             # An alternative approach to sleep for a precise duration
             # This approach can be CPU intensive.
             start = time.perf_counter()
-            while (time.perf_counter() - start) < duration:
+            while (time.perf_counter() - start) < duration_seconds:
                 pass
-        
 
     def _wait_until_not_busy(self):
         current_timeout = 0
@@ -87,6 +86,7 @@ class Bootloader:
 
     def reset_axiom(self):
         self._comms.write_page(self.BLP_REG_COMMAND, 2, [0x02, 0x00])
+        time.sleep(0.150)
 
     def write_chunk(self, chunk):
         offset = 0
