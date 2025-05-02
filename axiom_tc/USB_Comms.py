@@ -278,9 +278,10 @@ class USB_Comms:
                 # print("len(buffer): %d, to_transfer: %d" % (len(buffer),to_transfer))
             assert len(buffer) == self.hidPayloadSize
             self.__device.write(bytes(buffer))
-            rd_buffer = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
-            assert rd_buffer[0] == self.AX_TBP_WR_OK
             transferred = transferred + to_transfer
+
+            # We want to read from the bridge to clear the comms status, but don't need to use it.
+            _ = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
 
     def read_device(self):
         return self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
