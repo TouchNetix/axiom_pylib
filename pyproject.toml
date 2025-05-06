@@ -4,13 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "axiom_tc"
-version = "4.8.7.2"
+version = "4.8.7.3"
 description = "Python library for TouchNetix aXiom Touch Controllers"
 license = { text = "MIT" }
 readme = "README.md"
 authors = [
     { name="Mark Satterthwaite", email="mark.satterthwaite@touchnetix.com"},
     { name="James Cameron", email="james.cameron@touchnetix.com"},
+	{ name="Henry Spencer", email="henry.spencer@touchnetix.com"},
 ]
 
 classifiers = [
