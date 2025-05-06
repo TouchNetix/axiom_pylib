@@ -841,7 +841,7 @@ class u07_LiveView:
         self.reg_u83_channel_status_abs_noise[0] = field2
         self.reg_u83_channel_status_aux_noise[0] = field3
 
-        field0, field1, field2, field3, field4 = struct.unpack("<4H", bytes(bytearray(self._usage_binary_data[146:156])))
+        field0, field1, field2, field3, field4 = struct.unpack("<5H", bytes(bytearray(self._usage_binary_data[146:156])))
         self.reg_u83_channel_status_error_code[0] = field0 & 0x00FF
         self.reg_u83_channel_status_trans_operating_point[0] = field1
         self.reg_u83_channel_status_abs_cols_operating_point[0] = field2
@@ -857,7 +857,7 @@ class u07_LiveView:
         self.reg_u83_channel_status_abs_noise[1] = field2
         self.reg_u83_channel_status_aux_noise[1] = field3
 
-        field0, field1, field2, field3, field4 = struct.unpack("<4H", bytes(bytearray(self._usage_binary_data[164:174])))
+        field0, field1, field2, field3, field4 = struct.unpack("<5H", bytes(bytearray(self._usage_binary_data[164:174])))
         self.reg_u83_channel_status_error_code[1] = field0 & 0x00FF
         self.reg_u83_channel_status_trans_operating_point[1] = field1
         self.reg_u83_channel_status_abs_cols_operating_point[1] = field2
@@ -873,7 +873,7 @@ class u07_LiveView:
         self.reg_u83_channel_status_abs_noise[2] = field2
         self.reg_u83_channel_status_aux_noise[2] = field3
 
-        field0, field1, field2, field3, field4 = struct.unpack("<4H", bytes(bytearray(self._usage_binary_data[182:192])))
+        field0, field1, field2, field3, field4 = struct.unpack("<5H", bytes(bytearray(self._usage_binary_data[182:192])))
         self.reg_u83_channel_status_error_code[2] = field0 & 0x00FF
         self.reg_u83_channel_status_trans_operating_point[2] = field1
         self.reg_u83_channel_status_abs_cols_operating_point[2] = field2
