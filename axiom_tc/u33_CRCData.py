@@ -307,4 +307,37 @@ class u33_CRCData:
         if self._axiom.u31.is_usage_present_on_device(0x94):
             print("  u94 Delta Scale Map CRC      : 0x{:08X}".format(self.reg_u94_delta_scale_map_cdu_crc))
         print("  Runtime Hash                 : 0x{:08X}".format(self.reg_runtime_hash))
-# endregion
+    # endregion
+
+    # region u33 Usage Name Usage Revision 4
+    def _init_registers_uifrev4(self):
+        self._init_registers_uifrev3()
+
+    def _unpack_uifrev4(self):
+        self._unpack_uifrev3()
+
+    def _print_registers_uifrev4(self):
+        self._print_registers_uifrev3()
+    # endregion
+
+    # region u33 Usage Name Usage Revision 5
+    def _init_registers_uifrev5(self):
+        self._init_registers_uifrev3()
+
+    def _unpack_uifrev5(self):
+        self._unpack_uifrev3()
+
+    def _print_registers_uifrev5(self):
+        self._print_registers_uifrev3()
+    # endregion
+
+    # region u33 Usage Name Usage Revision 6
+    def _init_registers_uifrev6(self):
+        self._init_registers_uifrev3()
+
+    def _unpack_uifrev6(self):
+        self._unpack_uifrev3()
+
+    def _print_registers_uifrev6(self):
+        self._print_registers_uifrev3()
+    # endregion
