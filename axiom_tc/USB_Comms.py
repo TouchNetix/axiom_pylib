@@ -82,7 +82,6 @@ class USB_Comms:
             usb_devices = hid.enumerate(VID)
             self.max_length = 0
             self._verbose = verbose
-            self._verbose = True
             if len(usb_devices) != 0:
                 # USB Bridge found
                 break
@@ -207,7 +206,7 @@ class USB_Comms:
 
             length_msb |= self.AX_COMMS_READ  # Set the READ bit
 
-            usb_header = [0x01, self.AX_TBP_I2C_DEVICE1, self.AX_HEADER_LEN, to_transfer]
+            usb_header = [self.REPORT_ID, self.AX_TBP_I2C_DEVICE1, self.AX_HEADER_LEN, to_transfer]
             payload_header = [ta_lsb, ta_msb, length_lsb, length_msb]
             message = usb_header + payload_header
             wr_buffer = message + ([0] * (self.hidPayloadSize - len(message)))
@@ -219,14 +218,14 @@ class USB_Comms:
                 # print("write %d chars to device..." % len(wr_buffer))
             self.__device.write(bytes(wr_buffer))
             rd_buffer = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
-            print("rd_buffer: ", byte2ascii(rd_buffer))
             assert rd_buffer[self.RD_BASE + 0] == self.AX_TBP_RDWR_OK
             assert rd_buffer[self.RD_BASE + 1] == to_transfer
             if self._verbose:
                 print("Device Response:")
                 print("rd Buffer is of length: " + str(len(rd_buffer)))
                 print("rd Left to transfer: " + str(left_to_transfer))
-                print(byte2ascii(rd_buffer[3:3 + to_transfer]))
+                base = self.RD_BASE+2
+                print(byte2ascii(rd_buffer[base:base + to_transfer]))
 
             ret_buffer = ret_buffer + byte2int(rd_buffer[3:3 + to_transfer])
 
