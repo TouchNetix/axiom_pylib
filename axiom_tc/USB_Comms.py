@@ -219,14 +219,14 @@ class USB_Comms:
             rd_buffer = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
             assert rd_buffer[self.RD_BASE + 0] == self.AX_TBP_RDWR_OK
             assert rd_buffer[self.RD_BASE + 1] == to_transfer
+            base = self.RD_BASE+2
             if self._verbose:
                 print("Device Response:")
                 print("rd Buffer is of length: " + str(len(rd_buffer)))
                 print("rd Left to transfer: " + str(left_to_transfer))
-                base = self.RD_BASE+2
                 print(byte2ascii(rd_buffer[base:base + to_transfer]))
 
-            ret_buffer = ret_buffer + byte2int(rd_buffer[3:3 + to_transfer])
+            ret_buffer = ret_buffer + byte2int(rd_buffer[base:base + to_transfer])
 
         if len(ret_buffer) != length:
             print("ERROR: Did not return enough bytes, requested %d, returned %d." %
