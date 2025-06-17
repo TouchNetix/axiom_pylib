@@ -65,9 +65,13 @@ class USB_Comms:
     GD_VENDOR_ID = 0x28E9
     VENDOR_ID = [ATMEL_VENDOR_ID, ST_VENDOR_ID, GD_VENDOR_ID]
     PRODUCT_ID = [0x6f02, 0x2f04, 0x2f08]
-    EMPTY_PKT = [0] * MAX_WR_BUFFER_SIZE
+    @property
+    def EMPTY_PKT(self):
+        return [self.REPORT_ID] + [0]*(self.MAX_WR_BUFFER_SIZE -1)
     RD_TIMEOUT = 100
     MAX_TBP_STOP_RETRY = 2
+    RD_BASE = 0
+    REPORT_ID = 0x00  # Report ID for the USB Bridge
 
     def __init__(self, verbose=False):
         self._axiom = None
@@ -92,7 +96,7 @@ class USB_Comms:
                 print("Found TNx USB Bridge devices...")
             for dev in usb_devices:
                 # Graceful error needed for USB device not available
-                if dev['interface_number'] == self.AX_IF_TBPCTRL:
+                if dev['interface_number'] == self.AX_IF_TBPCTRL and dev['usage_page'] == 0xffff:
                     path = dev['path']
                     self.__device = hid.Device(path=path)
                     self.vid = dev['vendor_id']
@@ -118,6 +122,10 @@ class USB_Comms:
                     self.max_wr_pay_length = (self.wMaxPacketSize == 64) and (
                                 64 - self.AX_HEADER_LEN - self.AX_USB_HEADER_LEN) or (255 - self.AX_HEADER_LEN)
                     self.max_rd_pay_length = (self.wMaxPacketSize == 64) and (64 - self.AX_RX_HEADER_LEN) or 255
+                    if 'AXPB015' in dev['product_string']:
+                        self.max_rd_pay_length = self.max_rd_pay_length - 1
+                        self.RD_BASE = 1 # include the report ID in the read buffer
+                        self.REPORT_ID = 0x01
                     if self._verbose:
                         print('Max Write Length: ' + str(self.max_wr_pay_length))
                         print('Max Read Length: ' + str(self.max_rd_pay_length))
@@ -148,7 +156,7 @@ class USB_Comms:
             if self._verbose:
                 print(buffer_rd)
 
-            if buffer_rd[0] == self.AX_TBP_CMD_NULL:
+            if buffer_rd[self.RD_BASE] == self.AX_TBP_CMD_NULL:
                 while len(buffer_rd) != 0:
                     buffer_rd = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
                 if self._verbose:
@@ -197,7 +205,7 @@ class USB_Comms:
 
             length_msb |= self.AX_COMMS_READ  # Set the READ bit
 
-            usb_header = [0x00, self.AX_TBP_I2C_DEVICE1, self.AX_HEADER_LEN, to_transfer]
+            usb_header = [self.REPORT_ID, self.AX_TBP_I2C_DEVICE1, self.AX_HEADER_LEN, to_transfer]
             payload_header = [ta_lsb, ta_msb, length_lsb, length_msb]
             message = usb_header + payload_header
             wr_buffer = message + ([0] * (self.hidPayloadSize - len(message)))
@@ -209,15 +217,16 @@ class USB_Comms:
                 # print("write %d chars to device..." % len(wr_buffer))
             self.__device.write(bytes(wr_buffer))
             rd_buffer = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
-            assert rd_buffer[0] == self.AX_TBP_RDWR_OK
-            assert rd_buffer[1] == to_transfer
+            assert rd_buffer[self.RD_BASE + 0] == self.AX_TBP_RDWR_OK
+            assert rd_buffer[self.RD_BASE + 1] == to_transfer
+            base = self.RD_BASE+2
             if self._verbose:
                 print("Device Response:")
                 print("rd Buffer is of length: " + str(len(rd_buffer)))
                 print("rd Left to transfer: " + str(left_to_transfer))
-                print(byte2ascii(rd_buffer[2:2 + to_transfer]))
+                print(byte2ascii(rd_buffer[base:base + to_transfer]))
 
-            ret_buffer = ret_buffer + byte2int(rd_buffer[2:2 + to_transfer])
+            ret_buffer = ret_buffer + byte2int(rd_buffer[base:base + to_transfer])
 
         if len(ret_buffer) != length:
             print("ERROR: Did not return enough bytes, requested %d, returned %d." %
@@ -300,14 +309,14 @@ class USB_Comms:
         if self._verbose:
             print("target address: ", target_address)
             print("max_report_len", max_report_len)
-        usb_header = [0x00, self.AX_TBP_REPEAT, 0x58, 0x04]
+        usb_header = [self.REPORT_ID, self.AX_TBP_REPEAT, 0x58, 0x04]
         payload_header = [max_report_len, target_address & 0xff, target_address >> 8, max_report_len,
                           self.AX_COMMS_READ]
         buffer = usb_header + payload_header + ([0] * (self.hidPayloadSize - len(usb_header) - len(payload_header)))
         self.__device.write(bytes(buffer[0:self.hidPayloadSize]))
         rd_buffer = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
-        assert ((rd_buffer[0] == self.AX_TBP_REPEAT and rd_buffer[1] == self.AX_TBP_RDWR_OK) or  # PB-005
-                (rd_buffer[0] == self.AX_TBP_USBID_UNSOLICITED and rd_buffer[1] == 0x4))  # PB-007
+        assert ((rd_buffer[self.RD_BASE+0] == self.AX_TBP_REPEAT and rd_buffer[self.RD_BASE+1] == self.AX_TBP_RDWR_OK) or  # PB-005
+                (rd_buffer[self.RD_BASE+0] == self.AX_TBP_USBID_UNSOLICITED and rd_buffer[self.RD_BASE+1] == 0x4))  # PB-007
         if self._verbose:
             print("Bridge is in Proxy Mode!")
 
