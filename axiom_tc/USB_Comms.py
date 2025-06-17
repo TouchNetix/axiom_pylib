@@ -145,7 +145,6 @@ class USB_Comms:
         # See the following:
         # https://github.com/sergiomsilva/alpr-unconstrained/issues/73
         # For the reason of having to use the "bytes" function
-        print(buffer_wr[0:self.hidPayloadSize])
         self.__device.write(bytes(buffer_wr[0:self.hidPayloadSize]))
         if self._verbose:
             print("    Bridge Stop requested...")
