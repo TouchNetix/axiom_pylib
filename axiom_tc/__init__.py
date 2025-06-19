@@ -8,6 +8,7 @@ from .CDU_Common import *
 from .u02_SystemManager import *
 from .u06_SelfTest import *
 from .u07_LiveView import *
+from . import u07_LiveView_Utils
 from .u31_DeviceInformation import *
 from .u32_DeviceCapabilities import *
 from .u33_CRCData import *
@@ -20,6 +21,7 @@ __all__ = [
     "u02_SystemManager",
     "u06_SelfTest",
     "u07_LiveView",
+    "u07_LiveView_Utils",
     "u31_DeviceInformation",
     "u32_DeviceCapabilities",
     "u33_CRCData",
