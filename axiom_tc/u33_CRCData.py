@@ -34,8 +34,7 @@ class u33_CRCData:
         self._unpack()
 
     def write(self):
-        self.read()
-        raise Exception("Cannot write to u33. u33 is a read-only usage.")
+        raise PermissionError("u33_CRC Data is read-only and does not support write operations.")
 
     def print(self):
         self._print_registers()
@@ -194,6 +193,9 @@ class u33_CRCData:
 
         if self._axiom.u31.is_usage_present_on_device(0x43):
             print("  u43 Hotspots CRC        : 0x{:08X}".format(self.reg_u43_hotspots_cdu_crc))
+
+        if self._axiom.u31.is_usage_present_on_device(0x77):
+            print("  u77 Dial On Display CRC : 0x{:08X}".format(self.reg_u77_dod_calibration_data_crc))
 
         if self._axiom.u31.is_usage_present_on_device(0x93):
             print("  u93 Profiles CRC        : 0x{:08X}".format(self.reg_u93_profiles_cdu_crc))
