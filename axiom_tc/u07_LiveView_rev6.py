@@ -261,7 +261,7 @@ class u07_LiveViewRev6(UsageRevisionBase):
         print("      Sum of Nodes               : %5u" % self.reg_u83_self_test_frame_stats_trans_edges_sum)
         print("      Number of Nodes            : %5u" % self.reg_u83_self_test_frame_stats_trans_edges_count)
         print("    Corner Nodes")
-        print("      Node Max                   : %5u" % self.reg_u83_self_test_frame_stats_trans_corners_min)
+        print("      Node Max                   : %5u" % self.reg_u83_self_test_frame_stats_trans_corners_max)
         print("      Node Min                   : %5u" % self.reg_u83_self_test_frame_stats_trans_corners_min)
         print("")
         print("  Self Test 7 - Abs Cap Signal Limits")
