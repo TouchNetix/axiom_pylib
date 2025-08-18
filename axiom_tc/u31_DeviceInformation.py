@@ -32,7 +32,7 @@ class u31_DeviceInformation:
     u31_PAGE_0_LEN = 12
     PAGE_SIZE = 256
 
-    FW_VARIANTS = ["3D", "2D", "FORCE", "0D"]
+    FW_VARIANTS = ["3D", "2D", "FORCE", "0D", "XL"]
     FW_STATUS = ["eng", "prod"]
 
     def __init__(self, axiom, read=True, read_usage_table=True):
