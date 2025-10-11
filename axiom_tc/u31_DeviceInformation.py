@@ -137,10 +137,10 @@ class u31_DeviceInformation:
             # Calculate the usage length, taking into account reports and usages
             # that span multiple pages
             if num_pages == 0:
-                length = ((usage_buffer[offset + 3] & 0x7F) + 1) * 2
+                length = (max_offset + 1) * 2
             else:
                 if id != self.USAGE_ID:
-                    length = ((num_pages - 1) * self.PAGE_SIZE) + (((usage_buffer[offset + 3] & 0x7F) + 1) * 2)
+                    length = ((num_pages - 1) * self.PAGE_SIZE) + ((max_offset + 1) * 2)
                 else:
                     length = self.PAGE_SIZE + (self.reg_num_usages * 6)
 
