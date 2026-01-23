@@ -237,4 +237,18 @@ class u02_SystemManager:
         print("  Parameters[0] : %04X" % self.reg_parameters[0])
         print("  Parameters[1] : %04X" % self.reg_parameters[1])
         print("  Parameters[2] : %04X" % self.reg_parameters[2])
-# endregion
+    # endregion
+
+    # region u02 System Manager Usage Revision 3
+    def _init_registers_uifrev3(self):
+        self._init_registers_uifrev2()
+
+    def _unpack_uifrev3(self):
+        self._unpack_uifrev2()
+
+    def _pack_uifrev3(self):
+        self._pack_uifrev2()
+
+    def _print_registers_uifrev3(self):
+        self._print_registers_uifrev2()
+    # endregion
