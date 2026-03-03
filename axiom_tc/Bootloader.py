@@ -6,48 +6,69 @@
 import os
 import ctypes
 import time
+import logging
+
+from .u31_DeviceInformation import u31_DeviceInformation
+from .u02_SystemManager import u02_SystemManager
+
+logger = logging.getLogger(__name__)
+
+RESET_TIMEOUT = 2 # aXiom can take upto 2s to run through self tests at boot if they are all enabled
+EXIT_BOOTLOADER_TIMEOUT = 10 #  aXiom can take upto 10s to exit bootloader occasionally
+PAGE_SIZE = 256
 
 class Bootloader:
+    TIMEOUT_READS = 500
+
     # Bootloader protocol registers
     BLP_FIFO_ADDRESS = 0x0102
     BLP_REG_COMMAND = 0x0100
     BLP_REG_STATUS = 0x0100
 
-    def __init__(self, axiom=None, comms=None):
-        self._axiom = axiom
+    def __init__(self, comms, u02: u02_SystemManager | None = None, u31: u31_DeviceInformation| None = None):
         self._comms = comms
+        self._u02 = u02
+        self._u31 = u31
 
     def enter_bootloader_mode(self):
-        attempts = 5
 
+        if self._u02 is None:
+            raise ReferenceError("u02 not loaded, cannot enter bootloader!")
+        if self._u31 is None:
+            raise ReferenceError("u31 not loaded, cannot enter bootloader!")
+        
         # If the chip is already in bootloader mode, no need to continue
-        if self._axiom.is_in_bootloader_mode():
+        if self._u31.is_in_bootloader_mode():
             return True
 
-        # Depending on the sequence, the usage table may not be populated at
-        # this moment. The device is not in bootloader mode, so it should be
-        # safe to build the usage table. The usage table is required to send the
-        # appropriate system manager commands to aXiom to get it into bootloader
-        # mode
-        if not self._axiom.u31.usage_table_populated:
-            self._axiom.u31.build_usage_table()
-
-        # Attempt to enter bootloader mode
-        while (not self._axiom.is_in_bootloader_mode()) and (attempts > 0):
+        # Attempt to enter bootloader mode via system manager
+        system_manager_attempts = 5
+        while system_manager_attempts > 0:
             # Entering bootloader mode is "involved" to ensure it is a deliberate
             # request. Three "enter bootloader" commands are required, the number
             # on the end is the sequence number, that will send the appropriate
             # "magic" number to aXiom. If all is well, aXiom will be in the
             # bootloader a few moments after the last command.
-            self._axiom.u02.send_command(self._axiom.u02.CMD_ENTER_BOOTLOADER)
-
-            # Check if the device is in bootloader mode
-            if self._axiom.is_in_bootloader_mode():
-                # Bootloader flag is set, no need to continue.
+            self._u02.enter_bootloader()
+            if self._u31.is_in_bootloader_mode():
+                time.sleep(0.1) # ensure the bootloader is ready
                 return True
 
-            attempts -= 1
+            system_manager_attempts -= 1
 
+        # Try toggle nreset line if available
+        if hasattr(self._comms, "toggle_nreset"):
+            nreset_attempts = 3
+            while nreset_attempts > 0:
+                for i in range(5):
+                    self._comms.toggle_nreset() # do not send comms or else we cannot enter bootloader 
+                
+                if self._u31.is_in_bootloader_mode():
+                    time.sleep(0.1) # ensure the bootloader is ready
+                    return True
+                        
+                nreset_attempts -= 1
+            
         # Failed to enter bootloader mode
         return False
 
@@ -70,25 +91,19 @@ class Bootloader:
             while (time.perf_counter() - start) < duration_seconds:
                 pass
 
-    def _wait_until_not_busy(self):
+    def wait_until_not_busy(self):
         current_timeout = 0
         while self._get_busy_status():
             # aXiom is busy, wait 1ms before trying again
-            if current_timeout < self._axiom.TIMEOUT_MS:
+            if current_timeout < self.TIMEOUT_READS:
                 current_timeout = current_timeout + 1
             else:
-                print("ERROR: aXiom does not seem to be responding...")
-                raise TimeoutError
+                raise TimeoutError("aXiom does not seem to be responding...")
 
             # If busy, allow the bootloader to run a bit longer before asking again.
-            # A time.sleep(0.001) is not precise enough, it takes more than 1ms.
             self._precise_sleep(0.001)
 
-    def reset_axiom(self):
-        self._comms.write_page(self.BLP_REG_COMMAND, 2, [0x02, 0x00])
-        time.sleep(0.150)
-
-    def write_chunk(self, chunk):
+    def write_chunk(self, chunk: bytearray):
         offset = 0
         length = len(chunk)
 
@@ -96,15 +111,13 @@ class Bootloader:
         # here we probe the comms class to see if we have any USB specific
         # constants declared. If this is not the case then we assume chunk
         # size compatible with I2C/SPI.
-        try:
-            if self._comms.wMaxPacketSize > self._axiom.u31.PAGE_SIZE:
-                chunk_size = (self._axiom.u31.PAGE_SIZE - 1) - self._comms.AX_HEADER_LEN
+        if self._comms.COMMS_TYPE == "USB":
+            if self._comms.w_max_packet_size > PAGE_SIZE:
+                chunk_size = (PAGE_SIZE - 1) - self._comms.AX_HEADER_LEN - self._comms.AX_USB_HEADER_LEN - self._comms.rd_base
             else:
-                chunk_size = (self._comms.wMaxPacketSize - 1) \
-                             - self._comms.AX_TBP_I2C_DEV_HEAD_LEN \
-                             - self._comms.AX_HEADER_LEN
-        except AttributeError:
-            chunk_size = self._axiom.u31.PAGE_SIZE - 1
+                chunk_size = self._comms.max_wr_pay_length
+        else:
+            chunk_size = PAGE_SIZE - 1
 
         while offset < length:
             # Calculate how much data to transfer, up to the max transfer size
@@ -116,13 +129,10 @@ class Bootloader:
             # Extract the data to be transferred
             payload_chunk = chunk[offset:(offset + length_to_write)]
 
-             # Ensure aXiom is available to process our request
-            self._wait_until_not_busy()
-
-            # Send the data to aXiom
-            self._comms.write_page(self.BLP_FIFO_ADDRESS, length_to_write, payload_chunk)
+            self._comms.write_page(self.BLP_FIFO_ADDRESS, length_to_write, payload_chunk, bl_sync = True, ignore_return=True)
 
             offset += length_to_write
 
-        # Wait for the last page write to complete
-        self._wait_until_not_busy()
+        # Wait for decryption to complete
+        self.wait_until_not_busy()
+            

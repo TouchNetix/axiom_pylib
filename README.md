@@ -4,51 +4,89 @@ This library provides users the building blocks to communicate with the aXiom to
 
 ## File Overview
 
+### Core Module
 `axiom.py` - Provides the main business logic and interface to aXiom.
 
+### Bootloader
 `Bootloader.py` - Manages the logic for handling firmware updates.
 
+### Communication Interfaces
 `I2C_Comms.py` - Provides the logic for performing I2C comms to aXiom.
 
 `SPI_Comms.py` - Provides the logic for performing SPI comms to aXiom.
 
 `USB_Comms.py` - Provides the logic for performing USB comms to aXiom.
 
+### Common Utilities
 `CDU_Common.py` - Some usages are CDU (command driven usages). These usages use additional logic to read/write their contents.
 
+`usage.py` - Common utilities and helper functions for usage modules.
+
+### Usage Modules
 `u02_SystemManager.py` - Provides access to aXiom's system manager. The aXiom device can be reset, jump to bootloader, save config changes to flash etc.
 
 `u06_SelfTest.py` - Provides access to configure and control the self test settings in aXiom.
 
 `u07_LiveView.py` - Provides access to read live data from aXiom. For instance GPIO status, acquisition status and self test status.
 
+`u31_DeviceInformation.py` - Provides access to device information and usage table entries from aXiom.
+
 `u32_DeviceCapabilities.py` - Reports the capabilities of the aXiom device. For instance, the number CTS nodes, which comms interfaces are supported etc.
 
 `u33_CRCData.py` - Provides access to the CRCs within aXiom.
 
-`u48_GPIOControls.py` - Provides access to the GPIO controls for aXiom.
+`u34_ReportController.py` - Manages report data retrieval and handling from aXiom.
 
-`uXX_Template.py` - Template file to use when creating more python files for specific usages.
+`u48_GPIOControls.py` - Provides access to the GPIO controls for aXiom.
 
 ## Prerequisites
 
 Requires Python 3.8 to be installed and accessible on the Path variable.
 
-### axiom_tc Package
+## Package Build
 
-This is the aXiom touch controller python package that provides access to core functionality and communication to the aXiom device. In conjunction with the `axiom_tc` package, the appropriate interface packages are expected to be available. These are described after this section.
+This is the aXiom touch controller python package that provides access to core functionality and communication to the aXiom device. 
+The `axiom_usages` submodule provides the usage definitions for every available revision. 
+In conjunction with the `axiom_tc` package, the appropriate interface packages are expected to be available. These are described after this section.
 
-Requires `axiom_tc` to be installed and accessible to your Python interpreter.
+Load `axiom_usages` repo:
+```
+git submodule update --init
+```
 
-```console
-pip install axiom_tc
+Set up a virtual environment:
+Linux:
+```
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+Windows:
+```
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Build the package:
+```
+python -m pip install --upgrade build
+python -m build
+```
+
+### Core Dependencies
+
+The `axiom_usages` module is required as a core dependency for usage definitions and field access:
+
+```
+pip install axiom_usages
 ```
 
 ### SPI Interface
 
 Requires `spidev` to be installed and accessible to your Python interpreter.
 
-```console
+```
 pip install spidev
 ```
 
@@ -58,7 +96,7 @@ See [spidev](https://pypi.org/project/spidev/) for more information.
 
 Requires `smbus2` to be installed and accessible to your Python interpreter.
 
-```console
+```
 pip install smbus2
 ```
 
@@ -68,8 +106,8 @@ See [smbus2](https://pypi.org/project/smbus2/) for more information.
 
 Requires `hid` to be installed and accessible to your Python interpreter.
 
-```console
-pip install hid==1.0.4
+```
+pip install hidapi
 ```
 
 See [hid](https://pypi.org/project/hid/) for more information.
@@ -96,27 +134,42 @@ SUBSYSTEM=="hidraw", ATTRS{idVendor}=="28e9", ATTRS{idProduct}=="2f08", MODE="06
 
 The changes will apply on the next reboot. To apply the changes immediately:
 
-```console
+```
 sudo udevadm control --reload-rules
 sudo udevadm trigger
 ```
 
 If this error message is observed:
 
-```console
+```
 ImportError: Unable to load any of the following libraries:libhidapi-hidraw.so libhidapi-hidraw.so.0 libhidapi-libusb.so libhidapi-libusb.so.0 libhidapi-iohidmanager.so libhidapi-iohidmanager.so.0 libhidapi.dylib hidapi.dll libhidapi-0.dll
 ```
 
 Run the following to install the `hidapi` library.
 
-```console
+```
 sudo apt-get install libhidapi-hidraw0 libhidapi-libusb0
 ```
 
 #### Windows
 
-Windows requires the `hidapi.dll` files to reside in the same directory as python (see more info [here](https://github.com/abcminiuser/python-elgato-streamdeck/issues/56))
-The `.dll` files can be found [here](https://github.com/libusb/hidapi/releases)
+All HID requirements are installed with the `hidapi` python module.
+
+## Developement
+
+When using the library in a different project a local dependency link can be created. 
+from the axiom_pylib package directory:
+```
+cd axiom_pylib/
+pip install -e .
+```
+If developing in vscode you can add the axiom_pylib package directory for language server support.
+Add the path to settings.json:
+```
+"python.analysis.extraPaths": [
+    "../axiom_pylib",
+]
+```
 
 ## License
 

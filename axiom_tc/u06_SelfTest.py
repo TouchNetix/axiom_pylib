@@ -1,52 +1,62 @@
-# Copyright (c) 2025 TouchNetix
+# Copyright (c) 2024 TouchNetix
 # 
 # This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
+import struct
 from time import sleep
+import logging
 
-from .u06_SelfTest_rev3 import u06_SelfTestRev3
-from .u06_SelfTest_rev4 import u06_SelfTestRev4
-from .u06_SelfTest_rev5 import u06_SelfTestRev5
-from .u06_SelfTest_rev6 import u06_SelfTestRev6
-from .u06_SelfTest_rev7 import u06_SelfTestRev7
+from axiom_usages.axiom_usages.usages import u06
 
+logger = logging.getLogger(__name__)
 
-class u06_SelfTest:
-    USAGE_ID = 0x06
-    _REVISION_MAP = {
-        3: u06_SelfTestRev3,
-        4: u06_SelfTestRev4,
-        5: u06_SelfTestRev5,
-        6: u06_SelfTestRev6,
-        7: u06_SelfTestRev7,
-    }
+class u06_SelfTest(u06):
 
-    def __init__(self, axiom, read=True):
-        self._axiom = axiom
-        self._usage_revision = self._axiom.get_usage_revision(self.USAGE_ID)
-        usage_handler = self._REVISION_MAP.get(self._usage_revision)
-        if usage_handler is None:
-            raise Exception(f"Unsupported revision of u06 SelfTest: {self._usage_revision}")
-        self._usage_handler = usage_handler(axiom, self.USAGE_ID, read)
+    def __init__(self, usage_bytes: bytearray):
+        
+        self._raw = bytearray(self.USAGE_LEN) 
 
-    def read(self):
-        self._usage_handler.read()
+        self.set_bytes(usage_bytes[:self.USAGE_LEN])
 
-    def write(self, write_to_nvm=False):
-        self._usage_handler.write(write_to_nvm)
+        return
 
     def print(self):
-        self._usage_handler.print()
+        self.print_fld_attributes()
 
-    def __getattr__(self, name):
-        try:
-            return getattr(self._usage_handler, name)
-        except AttributeError:
-            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+    def toggle_heartbeat_tests(self, val):
+        self.fld_run_test_6_heartbeat = val
+        self.fld_run_test_7_heartbeat = val
+        self.fld_run_test_8_heartbeat = val
+        self.fld_run_test_9_heartbeat = val
+        self.fld_run_test_10_heartbeat = val
+        self.fld_enableu83selftestframes = val
+        self.fld_enableselftestonheartbeat = val
 
-    def __setattr__(self, name, value):
-        if name in ("_axiom", "_usage_revision", "_usage_handler", "USAGE_ID", "_REVISION_MAP"):
-            super().__setattr__(name, value)
-        else:
-            setattr(self._usage_handler, name, value)
+    def toggle_boot_tests(self, val):
+        self.fld_run_test_0_boot = val
+        self.fld_run_test_1_boot = val
+        self.fld_run_test_2_boot = val
+        self.fld_run_test_3_boot = val
+        self.fld_run_test_4_boot = val
+        self.fld_run_test_5_boot = val
+        self.fld_run_test_9_boot = val
+        self.fld_run_test_11_boot = val
+        self.fld_run_test_12_boot = val
+        self.fld_run_test_13_boot = val
+        self.fld_enableselftestonboot = val
+        
+    def toggle_user_trigger_tests(self, val, skip_signal_limit_tests=True):
+        self.fld_run_test_1_hosttrigger = val
+        self.fld_run_test_2_hosttrigger = val
+        self.fld_run_test_3_hosttrigger = val
+        self.fld_run_test_4_hosttrigger = val
+        self.fld_run_test_5_hosttrigger = val
+        self.fld_run_test_9_hosttrigger = val
+        self.fld_run_test_10_hosttrigger = val
+        self.fld_run_test_11_hosttrigger = val
+        self.fld_run_test_13_hosttrigger = val
+        if not skip_signal_limit_tests:
+            self.fld_run_test_6_hosttrigger = val
+            self.fld_run_test_7_hosttrigger = val
+            self.fld_run_test_8_hosttrigger = val

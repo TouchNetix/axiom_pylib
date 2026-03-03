@@ -2,3 +2,7 @@
 /axiom_tc.egg-info
 __pycache__
 /.idea
+settings.json
+
+.venv/
+dist/

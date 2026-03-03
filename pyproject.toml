@@ -1,26 +1,35 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "axiom_tc"
-version = "4.9.3.1"
+version = "5.0.0.0"
 description = "Python library for TouchNetix aXiom Touch Controllers"
-license = { text = "MIT" }
+license = "MIT"
 readme = "README.md"
 authors = [
     { name="Mark Satterthwaite", email="mark.satterthwaite@touchnetix.com"},
     { name="James Cameron", email="james.cameron@touchnetix.com"},
-	{ name="Henry Spencer", email="henry.spencer@touchnetix.com"},
+    { name="Andrew Thomas", email="andrew.thomas@touchnetix.com"},
 ]
-
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 requires-python = ">=3.8"
 
-[project.urls]
-Homepage = "https://www.touchnetix.com/"
-Repository = "https://github.com/TouchNetix/axiom_pylib"
+# 1. REMOVE "axiom_usages" from dependencies. 
+# It is now internal code, not an external download.
+dependencies = [
+    # Add any dependencies that axiom_usages itself requires here 
+    # so they are installed when axiom_tc is installed.
+]
+
+[tool.setuptools]
+# 2. Explicitly include the submodule directory in the build
+packages = ["axiom_tc", "axiom_usages"]
+
+[tool.setuptools.package-data]
+# Ensure non-python files (like VERSION or README) inside the submodule are included
+"*" = ["*.txt", "*.md"]
