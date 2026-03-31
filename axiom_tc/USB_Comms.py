@@ -123,9 +123,21 @@ class USB_Comms:
                                 64 - self.AX_HEADER_LEN - self.AX_USB_HEADER_LEN) or (255 - self.AX_HEADER_LEN)
                     self.max_rd_pay_length = (self.wMaxPacketSize == 64) and (64 - self.AX_RX_HEADER_LEN) or 255
                     if 'AXPB015' in dev['product_string']:
-                        self.max_rd_pay_length = self.max_rd_pay_length - 1
-                        self.RD_BASE = 1 # include the report ID in the read buffer
                         self.REPORT_ID = 0x01
+                        self.RD_BASE = 1  # Offset read buffer to account for Report ID
+                        self.hidPayloadSize = self.wMaxPacketSize
+                    else:
+                        self.hidPayloadSize = self.wMaxPacketSize + 1
+
+                    # Recalculate max payload lengths based on overhead
+                    overhead = (self.REPORT_ID != 0) and 1 or 0
+                    if self.wMaxPacketSize == 64:
+                        self.max_wr_pay_length = 64 - self.AX_HEADER_LEN - self.AX_USB_HEADER_LEN - overhead
+                        self.max_rd_pay_length = 64 - self.AX_RX_HEADER_LEN - overhead
+                    else:
+                        self.max_wr_pay_length = 255 - self.AX_HEADER_LEN - overhead
+                        self.max_rd_pay_length = 255 - overhead
+
                     if self._verbose:
                         print('Max Write Length: ' + str(self.max_wr_pay_length))
                         print('Max Read Length: ' + str(self.max_rd_pay_length))
