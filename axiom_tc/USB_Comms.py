@@ -5,6 +5,7 @@
 
 import hid
 import sys
+import time
 
 
 def byte2ascii(buffer):
@@ -173,6 +174,7 @@ class USB_Comms:
                     buffer_rd = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
                 if self._verbose:
                     print("    flushed...")
+                time.sleep(0.050)
                 return
         print("ERROR: could not issue stop command to USB Bridge.")
         raise AssertionError
@@ -346,10 +348,34 @@ class USB_Comms:
         if self._verbose:
             print("    Null Command Sent...")
 
+    def get_irq_state(self):
+        """
+        Sends command 0xE3 to query the nIRQ pin state on the bridge.
+        Returns:
+            True  : nIRQ asserted (pin state = 1)
+            False : nIRQ unasserted (pin state = 0)
+            None  : Command unsupported by bridge (0x99)
+        """
+        CMD_GET_IRQ_STATE = 0xE3
+        try:
+            buffer = list(self.EMPTY_PKT)
+            buffer[1] = CMD_GET_IRQ_STATE
+            self.write_device(buffer)
+            response = self.read_device()
+            if not response or len(response) < 2 or response[0] == 0x99 or response[1] == 0x99 or response[0] != CMD_GET_IRQ_STATE:
+                return None
+            return response[1] == 1
+        except Exception:
+            return None
+
     def close(self, doreset=False):
         if self.pid == self.PRODUCT_ID[0]:
-            # Only do this for tbp mode...
-            self.set_proxy_mode()
+            # Only restore proxy streaming mode if in runtime
+            if self._axiom is not None and not self._axiom.is_in_bootloader_mode():
+                try:
+                    self.set_proxy_mode()
+                except Exception:
+                    pass
         else:
             if doreset:
                 self.reset_bridge()

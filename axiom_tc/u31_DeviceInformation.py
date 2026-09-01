@@ -117,8 +117,8 @@ class u31_DeviceInformation:
         self._usage_table_populated = False
         self.read()
 
-        # Verify the device is not in bootloader mode
-        if self.reg_mode != 0:
+        # Verify the device is not in bootloader mode and has valid device information
+        if self.reg_mode != 0 or self.reg_device_id == 0 or self.reg_num_usages == 0:
             return False
 
         target_address = self.convert_usage_to_target_address(0x31, 1)

@@ -106,9 +106,10 @@ class u02_SystemManager:
             self.write()
             sleep(0.1)
         else:
-            # Don't perform u02 verify reads for reset commands
+            # Don't perform u02 verify reads for reset commands or self-tests
             if (command == self.CMD_HARD_RESET or
-                    command == self.CMD_SOFT_RESET):
+                    command == self.CMD_SOFT_RESET or
+                    command == self.CMD_RUN_SELF_TESTS):
                 skip_verify = True
 
             self.write()
