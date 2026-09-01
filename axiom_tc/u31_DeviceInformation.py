@@ -76,8 +76,12 @@ class u31_DeviceInformation:
             self.build_usage_table()
 
     def read(self):
-        self._usage_binary_data = self._axiom._comms.read_page(self.u31_TARGET_ADDRESS, self.u31_PAGE_0_LEN)
-        self._unpack()
+        try:
+            self._usage_binary_data = self._axiom._comms.read_page(self.u31_TARGET_ADDRESS, self.u31_PAGE_0_LEN)
+            self._unpack()
+        except Exception:
+            self._usage_binary_data = [0] * self.u31_PAGE_0_LEN
+            self._unpack()
 
     def print_device_info(self):
         self._print_registers()
