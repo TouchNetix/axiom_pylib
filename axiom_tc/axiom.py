@@ -145,8 +145,8 @@ class axiom:
         if not self.u31.usage_table_populated or 0x34 not in self.u31.usage_table:
             return False
 
-        u34_address = self.u31.convert_usage_to_target_address(0x34, 0)
-        report_length = self.u31.usage_table[0x34].length
+        u34_address = self.u31.convert_usage_to_target_address(0x34)
+        report_length = self.u31.max_report_len
 
         start_time = time.time()
         can_get_irq = hasattr(self._comms, "get_irq_state")
@@ -185,27 +185,18 @@ class axiom:
 
         time.sleep(0.150)
 
-        # If usage table is not yet populated, wait until in runtime mode
-        if not self.u31.usage_table_populated:
-            start_time = time.time()
-            while (time.time() - start_time) < timeout:
-                if not self.is_in_bootloader_mode() and self.u31.build_usage_table():
-                    break
-                time.sleep(0.100)
-            else:
-                print("ERROR: Device timed out exiting bootloader mode.")
-                return False
+        # Poll until device info (u31) is valid and usage table is built
+        start_time = time.time()
+        while (time.time() - start_time) < timeout:
+            if self.u31.build_usage_table():
+                break
+            time.sleep(0.100)
+        else:
+            print("ERROR: Device timed out waiting for runtime device info.")
+            return False
 
         if not self.wait_for_u01_report(timeout=timeout):
             print("ERROR: Timed out waiting for aXiom boot report (u01).")
-            return False
-
-        for _ in range(5):
-            if self.u31.build_usage_table():
-                break
-            time.sleep(0.050)
-        else:
-            print("ERROR: Failed to rebuild usage table after reset.")
             return False
 
         if 0x02 in self.u31.usage_table:

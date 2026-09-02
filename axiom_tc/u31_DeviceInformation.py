@@ -125,9 +125,14 @@ class u31_DeviceInformation:
         if self.reg_mode != 0 or self.reg_device_id == 0 or self.reg_num_usages == 0:
             return False
 
-        target_address = self.convert_usage_to_target_address(0x31, 1)
-        usage_buffer = self._axiom._comms.read_page(target_address,
-                                                    (self.reg_num_usages * _Usage_Table_Entry.USAGE_TABLE_ENTRY_SIZE))
+        try:
+            target_address = self.convert_usage_to_target_address(0x31, 1)
+            usage_buffer = self._axiom._comms.read_page(target_address,
+                                                        (self.reg_num_usages * _Usage_Table_Entry.USAGE_TABLE_ENTRY_SIZE))
+            if not usage_buffer or len(usage_buffer) < (self.reg_num_usages * _Usage_Table_Entry.USAGE_TABLE_ENTRY_SIZE):
+                return False
+        except Exception:
+            return False
 
         for usage in range(0, self.reg_num_usages):
             offset = usage * _Usage_Table_Entry.USAGE_TABLE_ENTRY_SIZE
