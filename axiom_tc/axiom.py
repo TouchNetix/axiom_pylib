@@ -167,7 +167,7 @@ class axiom:
                     if (report_bytes[0] & 0x80) == 0 and report_bytes[1] == 0x01:
                         time.sleep(0.050)  # Safety settle delay after u01 report
                         return True
-            except Exception:
+            except (IOError, OSError, AssertionError):
                 pass
 
             time.sleep(0.050)
