@@ -380,8 +380,9 @@ class USB_Comms:
             if self._axiom is not None and not self._axiom.is_in_bootloader_mode():
                 try:
                     self.set_proxy_mode()
-                except Exception:
-                    pass
+                except Exception as exc:
+                    if self._verbose:
+                        print(f"WARNING: failed to restore proxy mode on close: {exc}")
         else:
             if doreset:
                 self.reset_bridge()
