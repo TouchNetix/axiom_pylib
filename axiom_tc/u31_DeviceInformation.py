@@ -79,7 +79,7 @@ class u31_DeviceInformation:
         try:
             self._usage_binary_data = self._axiom._comms.read_page(self.u31_TARGET_ADDRESS, self.u31_PAGE_0_LEN)
             self._unpack()
-        except Exception:
+        except (IOError, OSError, AssertionError, TypeError, ValueError, struct.error):
             self._usage_binary_data = [0] * self.u31_PAGE_0_LEN
             self._unpack()
 
