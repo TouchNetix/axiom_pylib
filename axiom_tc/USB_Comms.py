@@ -367,9 +367,10 @@ class USB_Comms:
             buffer[1] = CMD_GET_IRQ_STATE
             self.write_device(buffer)
             response = self.read_device()
-            if not response or len(response) < 2 or response[0] == 0x99 or response[1] == 0x99 or response[0] != CMD_GET_IRQ_STATE:
+            base = self.RD_BASE
+            if (not response) or (len(response) <= base + 1) or (response[base] != CMD_GET_IRQ_STATE) or (response[base] == 0x99) or (response[base + 1] == 0x99):
                 return None
-            return response[1] == 1
+            return response[base + 1] == 1
         except Exception:
             return None
 
