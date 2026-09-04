@@ -131,7 +131,7 @@ class u31_DeviceInformation:
                                                         (self.reg_num_usages * _Usage_Table_Entry.USAGE_TABLE_ENTRY_SIZE))
             if not usage_buffer or len(usage_buffer) < (self.reg_num_usages * _Usage_Table_Entry.USAGE_TABLE_ENTRY_SIZE):
                 return False
-        except Exception:
+        except (IOError, OSError, AssertionError):
             return False
 
         for usage in range(0, self.reg_num_usages):
