@@ -76,8 +76,12 @@ class u31_DeviceInformation:
             self.build_usage_table()
 
     def read(self):
-        self._usage_binary_data = self._axiom._comms.read_page(self.u31_TARGET_ADDRESS, self.u31_PAGE_0_LEN)
-        self._unpack()
+        try:
+            self._usage_binary_data = self._axiom._comms.read_page(self.u31_TARGET_ADDRESS, self.u31_PAGE_0_LEN)
+            self._unpack()
+        except (IOError, OSError, AssertionError, TypeError, ValueError, struct.error):
+            self._usage_binary_data = [0] * self.u31_PAGE_0_LEN
+            self._unpack()
 
     def print_device_info(self):
         self._print_registers()
@@ -117,13 +121,18 @@ class u31_DeviceInformation:
         self._usage_table_populated = False
         self.read()
 
-        # Verify the device is not in bootloader mode
-        if self.reg_mode != 0:
+        # Verify the device is not in bootloader mode and has valid device information
+        if self.reg_mode != 0 or self.reg_device_id == 0 or self.reg_num_usages == 0:
             return False
 
-        target_address = self.convert_usage_to_target_address(0x31, 1)
-        usage_buffer = self._axiom._comms.read_page(target_address,
-                                                    (self.reg_num_usages * _Usage_Table_Entry.USAGE_TABLE_ENTRY_SIZE))
+        try:
+            target_address = self.convert_usage_to_target_address(0x31, 1)
+            usage_buffer = self._axiom._comms.read_page(target_address,
+                                                        (self.reg_num_usages * _Usage_Table_Entry.USAGE_TABLE_ENTRY_SIZE))
+            if not usage_buffer or len(usage_buffer) < (self.reg_num_usages * _Usage_Table_Entry.USAGE_TABLE_ENTRY_SIZE):
+                return False
+        except (IOError, OSError, AssertionError):
+            return False
 
         for usage in range(0, self.reg_num_usages):
             offset = usage * _Usage_Table_Entry.USAGE_TABLE_ENTRY_SIZE

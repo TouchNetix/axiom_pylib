@@ -3,6 +3,7 @@
 # This file is part of axiom_tc and is released under the MIT License:
 # See the LICENSE file in the root directory of this project or http://opensource.org/licenses/MIT.
 
+import time
 from .CDU_Common import CDU_Common
 from .u02_SystemManager import u02_SystemManager
 from .u31_DeviceInformation import u31_DeviceInformation
@@ -40,7 +41,7 @@ class axiom:
         # used if the device is in bootloader mode.
         self.u31 = u31_DeviceInformation(self, read_usage_table)
 
-        if self.is_in_bootloader_mode():
+        if self.is_in_bootloader_mode() or not self.u31.usage_table_populated or 0x02 not in self.u31.usage_table:
             self.u02 = None
         else:
             self.u02 = u02_SystemManager(self)
@@ -95,22 +96,27 @@ class axiom:
             buffer_offset += self.u31.PAGE_SIZE
 
     def get_usage_revision(self, usage):
-        if not self.u31.usage_table_populated:
+        if not self.u31.usage_table_populated or usage not in self.u31.usage_table:
             revision = 0
         else:
             revision = self.u31.usage_table[usage].usage_rev
         return revision
 
     def get_usage_length(self, usage):
-        if self.u31.usage_table_populated:
+        if self.u31.usage_table_populated and usage in self.u31.usage_table:
             return self.u31.usage_table[usage].length
         else:
             return 0
 
     def is_in_bootloader_mode(self):
         u31_ta = 0x0000
-        u31_page0 = self._comms.read_page(u31_ta, 12)
-        return True if (u31_page0[1] & 0x80) else False
+        try:
+            u31_page0 = self._comms.read_page(u31_ta, 12)
+            if not u31_page0 or len(u31_page0) < 12:
+                return True
+            return True if (u31_page0[1] & 0x80) or (u31_page0[0] == 0 and u31_page0[1] == 0) else False
+        except Exception:
+            return True
 
     def config_write_usage_to_device(self, usage, buffer):
         if usage in self.ignore_usage_list:  # These are informational usages or read only
@@ -131,6 +137,72 @@ class axiom:
                 print("Expected Length: %d and Actual Length: %d" % (len(buffer), len(usage_buffer)))
                 print("Expecting: " + str(buffer))
                 print("Read from Device: " + str(usage_buffer))
+
+    def wait_for_u01_report(self, timeout=15.0):
+        """
+        Polls u34 for a u01 System Manager report confirming startup completion.
+        """
+        if not self.u31.usage_table_populated or 0x34 not in self.u31.usage_table:
+            return False
+
+        u34_address = self.u31.convert_usage_to_target_address(0x34)
+        report_length = self.u31.max_report_len
+
+        start_time = time.time()
+        can_get_irq = hasattr(self._comms, "get_irq_state")
+
+        while (time.time() - start_time) < timeout:
+            if can_get_irq:
+                irq_state = self._comms.get_irq_state()
+                if irq_state is None:
+                    can_get_irq = False  # 0xE3 unsupported, switch to polling
+                elif not irq_state:
+                    time.sleep(0.010)
+                    continue
+
+            try:
+                report_bytes = self._comms.read_page(u34_address, report_length)
+                if report_bytes and len(report_bytes) >= 2:
+                    # Byte 0 bit 7 = 0 (valid data), Byte 1 = 0x01 (u01 System Manager)
+                    if (report_bytes[0] & 0x80) == 0 and report_bytes[1] == 0x01:
+                        time.sleep(0.050)  # Safety settle delay after u01 report
+                        return True
+            except (IOError, OSError, AssertionError):
+                pass
+
+            time.sleep(0.050)
+
+        return False
+
+    def reset_axiom(self, timeout=15.0):
+        """
+        Resets the device and waits for it to become ready in runtime mode.
+        """
+        if self.is_in_bootloader_mode():
+            Bootloader(self, self._comms).reset_axiom()
+        elif self.u02 is not None:
+            self.u02.send_command(self.u02.CMD_SOFT_RESET)
+
+        time.sleep(0.150)
+
+        # Poll until device info (u31) is valid and usage table is built
+        start_time = time.time()
+        while (time.time() - start_time) < timeout:
+            if self.u31.build_usage_table():
+                break
+            time.sleep(0.100)
+        else:
+            print("ERROR: Device timed out waiting for runtime device info.")
+            return False
+
+        if not self.wait_for_u01_report(timeout=timeout):
+            print("ERROR: Timed out waiting for aXiom boot report (u01).")
+            return False
+
+        if 0x02 in self.u31.usage_table:
+            self.u02 = u02_SystemManager(self)
+
+        return True
 
     def close(self):
         self._comms.close()

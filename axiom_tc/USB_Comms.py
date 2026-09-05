@@ -5,6 +5,7 @@
 
 import hid
 import sys
+import time
 
 
 def byte2ascii(buffer):
@@ -161,19 +162,21 @@ class USB_Comms:
         if self._verbose:
             print("    Bridge Stop requested...")
 
-        # Check for buffer, if they don't match, just try a couple of times:
-        retries = 0
-        while retries < self.MAX_TBP_STOP_RETRY:
+        # Flush any in-flight streaming packets until we receive the NULL command acknowledgment
+        start_time = time.time()
+        while (time.time() - start_time) < 1.0:
             buffer_rd = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
             if self._verbose:
                 print(buffer_rd)
 
-            if buffer_rd[self.RD_BASE] == self.AX_TBP_CMD_NULL:
+            if len(buffer_rd) > self.RD_BASE and buffer_rd[self.RD_BASE] == self.AX_TBP_CMD_NULL:
                 while len(buffer_rd) != 0:
-                    buffer_rd = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
+                    buffer_rd = self.__device.read(self.hidPayloadSize, timeout=20)
                 if self._verbose:
                     print("    flushed...")
+                time.sleep(0.050)
                 return
+
         print("ERROR: could not issue stop command to USB Bridge.")
         raise AssertionError
 
@@ -229,8 +232,12 @@ class USB_Comms:
                 # print("write %d chars to device..." % len(wr_buffer))
             self.__device.write(bytes(wr_buffer))
             rd_buffer = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
-            assert rd_buffer[self.RD_BASE + 0] == self.AX_TBP_RDWR_OK
-            assert rd_buffer[self.RD_BASE + 1] == to_transfer
+            retries = 0
+            while len(rd_buffer) > self.RD_BASE and rd_buffer[self.RD_BASE + 0] != self.AX_TBP_RDWR_OK and retries < 5:
+                rd_buffer = self.__device.read(self.hidPayloadSize, timeout=self.RD_TIMEOUT)
+                retries += 1
+            if not rd_buffer or len(rd_buffer) <= self.RD_BASE + 1 or rd_buffer[self.RD_BASE + 0] != self.AX_TBP_RDWR_OK or rd_buffer[self.RD_BASE + 1] != to_transfer:
+                raise IOError("I2C/SPI transaction failed (NACK or timeout)")
             base = self.RD_BASE+2
             if self._verbose:
                 print("Device Response:")
@@ -346,10 +353,36 @@ class USB_Comms:
         if self._verbose:
             print("    Null Command Sent...")
 
+    def get_irq_state(self):
+        """
+        Sends command 0xE3 to query the nIRQ pin state on the bridge.
+        Returns:
+            True  : nIRQ asserted (pin state = 1)
+            False : nIRQ unasserted (pin state = 0)
+            None  : Command unsupported by bridge (0x99)
+        """
+        CMD_GET_IRQ_STATE = 0xE3
+        try:
+            buffer = list(self.EMPTY_PKT)
+            buffer[1] = CMD_GET_IRQ_STATE
+            self.write_device(buffer)
+            response = self.read_device()
+            base = self.RD_BASE
+            if (not response) or (len(response) <= base + 1) or (response[base] != CMD_GET_IRQ_STATE) or (response[base] == 0x99) or (response[base + 1] == 0x99):
+                return None
+            return response[base + 1] == 1
+        except Exception:
+            return None
+
     def close(self, doreset=False):
         if self.pid == self.PRODUCT_ID[0]:
-            # Only do this for tbp mode...
-            self.set_proxy_mode()
+            # Only restore proxy streaming mode if in runtime
+            if self._axiom is not None and not self._axiom.is_in_bootloader_mode():
+                try:
+                    self.set_proxy_mode()
+                except Exception as exc:
+                    if self._verbose:
+                        print(f"WARNING: failed to restore proxy mode on close: {exc}")
         else:
             if doreset:
                 self.reset_bridge()

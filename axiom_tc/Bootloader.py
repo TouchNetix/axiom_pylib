@@ -22,6 +22,10 @@ class Bootloader:
 
         # If the chip is already in bootloader mode, no need to continue
         if self._axiom.is_in_bootloader_mode():
+            if hasattr(self._axiom, 'u31'):
+                self._axiom.u31._usage_table_populated = False
+                self._axiom.u31._usage_table = {}
+            self._axiom.u02 = None
             return True
 
         # Depending on the sequence, the usage table may not be populated at
@@ -44,6 +48,10 @@ class Bootloader:
             # Check if the device is in bootloader mode
             if self._axiom.is_in_bootloader_mode():
                 # Bootloader flag is set, no need to continue.
+                if hasattr(self._axiom, 'u31'):
+                    self._axiom.u31._usage_table_populated = False
+                    self._axiom.u31._usage_table = {}
+                self._axiom.u02 = None
                 return True
 
             attempts -= 1
@@ -85,7 +93,7 @@ class Bootloader:
             self._precise_sleep(0.001)
 
     def reset_axiom(self):
-        self._comms.write_page(self.BLP_REG_COMMAND, 2, [0x02, 0x00])
+        self._comms.write_page(self.BLP_REG_COMMAND, 4, [0x02, 0x00, 0x00, 0x00])
         time.sleep(0.150)
 
     def write_chunk(self, chunk):
